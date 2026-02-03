@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # MERN Lab Project
 
 A beginner-friendly MERN (MongoDB, Express, React, Node.js) stack boilerplate for web development learning.
@@ -183,3 +184,7 @@ This boilerplate covers:
 ## License
 
 ISC
+=======
+# WebAlarm
+Web Project
+>>>>>>> 55e2c4c50d5f3e14b5f83938c759703ceb73ecfd

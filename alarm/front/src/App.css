@@ -1,0 +1,109 @@
+* {
+  box-sizing: border-box;
+  font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+/* Layout */
+.container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* LEFT SIDE */
+.left {
+  width: 65%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.left video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* RIGHT SIDE */
+.right {
+  position: relative;
+  width: 35%;
+  height: 100%;
+  overflow: hidden;
+
+  background: linear-gradient(
+    120deg,
+    #f9fafb,
+    #e5e7eb,
+    #c7d2fe,
+    #e0e7ff
+  );
+  background-size: 400% 400%;
+  animation: gradientFlow 12s ease infinite;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Gradient animation */
+@keyframes gradientFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* FLOATING BALLS / STARS */
+.particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.particles li {
+  position: absolute;
+  display: block;
+  list-style: none;
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  animation: float 20s linear infinite;
+  bottom: -150px;
+}
+
+/* Random sizes & positions */
+.particles li:nth-child(1) { left: 10%; width: 10px; height: 10px; animation-duration: 15s; }
+.particles li:nth-child(2) { left: 20%; width: 25px; height: 25px; animation-duration: 18s; }
+.particles li:nth-child(3) { left: 30%; width: 15px; height: 15px; animation-duration: 12s; }
+.particles li:nth-child(4) { left: 40%; width: 40px; height: 40px; animation-duration: 22s; }
+.particles li:nth-child(5) { left: 50%; width: 12px; height: 12px; animation-duration: 14s; }
+.particles li:nth-child(6) { left: 60%; width: 30px; height: 30px; animation-duration: 19s; }
+.particles li:nth-child(7) { left: 70%; width: 18px; height: 18px; animation-duration: 16s; }
+.particles li:nth-child(8) { left: 80%; width: 35px; height: 35px; animation-duration: 25s; }
+.particles li:nth-child(9) { left: 90%; width: 14px; height: 14px; animation-duration: 13s; }
+.particles li:nth-child(10){ left: 25%; width: 22px; height: 22px; animation-duration: 17s; }
+
+/* Floating motion */
+@keyframes float {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-110vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Keep clock above particles */
+.right > *:not(.particles) {
+  position: relative;
+  z-index: 2;
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1770457841023,
+    "title": "hi",
+    "content": "here",
+    "tags": [
+      "here"
+    ],
+    "createdAt": "2026-02-07T09:50:41.023Z",
+    "updatedAt": "2026-02-07T09:50:41.023Z"
+  },
+  {
+    "id": 1770466553289,
+    "title": "Smoke Test",
+    "content": "Test content from smoke test",
+    "tags": [
+      "smoke",
+      "ci"
+    ],
+    "createdAt": "2026-02-07T12:15:53.289Z",
+    "updatedAt": "2026-02-07T12:15:53.289Z"
+  }
+]

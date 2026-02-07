@@ -1,0 +1,154 @@
+.math-dots-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.game-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 30px;
+  color: #fff;
+  max-width: 600px;
+  width: 100%;
+}
+
+.game-card h2 {
+  text-align: center;
+  margin-bottom: 10px;
+  font-size: 28px;
+  color: #61dafb;
+}
+
+.game-description {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 20px;
+}
+
+.game-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat-label {
+  display: block;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  display: block;
+  font-size: 24px;
+  font-weight: bold;
+  color: #61dafb;
+}
+
+.btn-start,
+.btn-replay {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #61dafb, #3dd5f3);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 20px;
+}
+
+.btn-start:hover,
+.btn-replay:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(97, 218, 251, 0.4);
+}
+
+.dots-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin: 30px 0;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+}
+
+.dot {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(97, 218, 251, 0.2);
+  border: 2px solid #61dafb;
+  border-radius: 50%;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 18px;
+  color: #61dafb;
+  transition: all 0.2s ease;
+}
+
+.dot:hover {
+  background: rgba(97, 218, 251, 0.4);
+  transform: scale(1.1);
+}
+
+.dot.active {
+  background: #61dafb;
+  color: #000;
+  box-shadow: 0 0 20px rgba(97, 218, 251, 0.8);
+  transform: scale(1.1);
+}
+
+.level-info {
+  text-align: center;
+  background: rgba(97, 218, 251, 0.1);
+  padding: 10px;
+  border-radius: 5px;
+  color: #61dafb;
+  font-weight: bold;
+}
+
+.game-over {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.game-over h3 {
+  color: #61dafb;
+  margin-bottom: 15px;
+  font-size: 24px;
+}
+
+.final-stats {
+  background: rgba(97, 218, 251, 0.1);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.final-stats p {
+  margin: 8px 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+}
+
+.final-stats strong {
+  color: #61dafb;
+}

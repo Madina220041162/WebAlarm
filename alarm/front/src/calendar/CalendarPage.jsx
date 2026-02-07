@@ -1,37 +1,50 @@
 import { useState } from "react";
 import CalendarHeader from "./CalendarHeader";
+import MonthView from "./views/MonthView";
 import DayView from "./views/DayView";
 import WeekView from "./views/WeekView";
-import MonthView from "./views/MonthView";
 import YearView from "./views/YearView";
 
 export default function CalendarPage() {
-  const [view, setView] = useState("month"); // day | week | month | year
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [view, setView] = useState("month");
 
-  function renderView() {
-    switch (view) {
-      case "day":
-        return <DayView date={currentDate} />;
-      case "week":
-        return <WeekView date={currentDate} />;
-      case "year":
-        return <YearView date={currentDate} />;
-      default:
-        return <MonthView date={currentDate} />;
-    }
-  }
+  // ← Previous
+  const goPrev = () => {
+    const d = new Date(currentDate);
+    if (view === "month") d.setMonth(d.getMonth() - 1);
+    if (view === "year") d.setFullYear(d.getFullYear() - 1);
+    setCurrentDate(d);
+  };
+
+  // → Next
+  const goNext = () => {
+    const d = new Date(currentDate);
+    if (view === "month") d.setMonth(d.getMonth() + 1);
+    if (view === "year") d.setFullYear(d.getFullYear() + 1);
+    setCurrentDate(d);
+  };
+
+  // Today
+  const goToday = () => {
+    setCurrentDate(new Date());
+  };
 
   return (
-    <div>
+    <>
       <CalendarHeader
+        currentDate={currentDate}
         view={view}
         setView={setView}
-        currentDate={currentDate}
-        setCurrentDate={setCurrentDate}
+        onPrev={goPrev}
+        onNext={goNext}
+        onToday={goToday}
       />
 
-      {renderView()}
-    </div>
+      {view === "month" && <MonthView currentDate={currentDate} />}
+      {view === "day" && <DayView currentDate={currentDate} />}
+      {view === "week" && <WeekView currentDate={currentDate} />}
+      {view === "year" && <YearView currentDate={currentDate} />}
+    </>
   );
 }

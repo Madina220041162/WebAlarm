@@ -1,0 +1,193 @@
+.month-view {
+  width: 100%;
+  max-width: 1100px;
+  margin: 18px auto 0;
+}
+
+.month-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0;
+  margin-bottom: 8px;
+}
+
+.weekday {
+  text-align: center;
+  font-size: 12px;
+  opacity: 0.65;
+  padding: 10px 0;
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: 110px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.day-cell {
+  position: relative;
+  padding: 10px;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.day-cell:nth-child(7n) {
+  border-right: none;
+}
+
+.day-number {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.day-cell.outside .day-number {
+  opacity: 0.25;
+}
+
+.day-cell.today .day-number {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.35);
+  border: 1px solid rgba(59, 130, 246, 0.45);
+}
+/* ===== YEAR VIEW ===== */
+
+.year-view {
+  padding: 20px;
+}
+
+.year-view h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.year-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.mini-month {
+  background: #1f1f1f;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.mini-month-title {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.mini-weekdays,
+.mini-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  font-size: 11px;
+  text-align: center;
+}
+
+.mini-weekdays {
+  opacity: 0.6;
+  margin-bottom: 4px;
+}
+
+.mini-days span {
+  padding: 2px 0;
+}
+/* ===== WEEK VIEW ===== */
+
+.week-view {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.week-header {
+  display: grid;
+  grid-template-columns: 60px repeat(7, 1fr);
+  border-bottom: 1px solid #333;
+}
+
+.week-body {
+  display: grid;
+  grid-template-columns: 60px repeat(7, 1fr);
+}
+
+.time-col {
+  border-right: 1px solid #333;
+}
+
+.time-slot {
+  height: 50px;
+  font-size: 11px;
+  padding: 4px;
+  opacity: 0.6;
+  border-bottom: 1px solid #222;
+}
+
+.day-col-header {
+  text-align: center;
+  padding: 8px 0;
+  border-right: 1px solid #333;
+}
+
+.day-number {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.day-col {
+  border-right: 1px solid #333;
+}
+
+.hour-cell {
+  height: 50px;
+  border-bottom: 1px solid #222;
+}
+
+/* ===== DAY VIEW ===== */
+
+.day-view {
+  width: 100%;
+}
+
+.day-header {
+  padding: 12px;
+  border-bottom: 1px solid #333;
+  text-align: center;
+}
+
+.day-title {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.day-body {
+  display: flex;
+  height: 1440px; /* 24h × 60min */
+}
+
+
+.day-column {
+  position: relative;   /* 🔥 REQUIRED */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* current time indicator */
+.now-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #3b82f6;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.8);
+  z-index: 10;
+}
+

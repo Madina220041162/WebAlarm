@@ -1,46 +1,32 @@
 export default function CalendarHeader({
   currentDate,
-  setCurrentDate,
+  view,
+  setView,
+  onPrev,
+  onNext,
+  onToday,
 }) {
-  const monthYear = currentDate.toLocaleDateString("en-US", {
+  const label = currentDate.toLocaleString("default", {
     month: "long",
     year: "numeric",
   });
 
-  function goPrev() {
-    const prev = new Date(currentDate);
-    prev.setMonth(prev.getMonth() - 1);
-    setCurrentDate(prev);
-  }
-
-  function goNext() {
-    const next = new Date(currentDate);
-    next.setMonth(next.getMonth() + 1);
-    setCurrentDate(next);
-  }
-
-  function goToday() {
-    setCurrentDate(new Date());
-  }
-
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        marginBottom: "20px",
-      }}
-    >
-      <button onClick={goPrev}>◀</button>
+    <div className="calendar-header">
+      <button onClick={onPrev}>◀</button>
 
-      <div style={{ fontSize: "20px", fontWeight: 600 }}>
-        {monthYear}
-      </div>
+      <strong>{label}</strong>
 
-      <button onClick={goNext}>▶</button>
+      <button onClick={onNext}>▶</button>
 
-      <button onClick={goToday}>Today</button>
+      <button onClick={onToday}>Today</button>
+
+      <select value={view} onChange={(e) => setView(e.target.value)}>
+        <option value="day">Day</option>
+        <option value="week">Week</option>
+        <option value="month">Month</option>
+        <option value="year">Year</option>
+      </select>
     </div>
   );
 }

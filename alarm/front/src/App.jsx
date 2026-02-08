@@ -1,96 +1,30 @@
-import React, { useState } from "react";
-import Clock from "./components/Clock";
+import { Routes, Route } from "react-router-dom";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ProtectedRoute from "./auth/ProtectedRoute";
 import CalendarPage from "./calendar/CalendarPage";
-import AlarmClock from "./components/Alarm";
-import SoundPicker from "./components/SoundPicker";
-import Notes from "./pages/Notes";
-import FileUpload from "./pages/FileUpload";
-import GamesHub from "./games/GamesHub";
-import Alarm from "./pages/Alarm";
-import "./App.css";
 
-function App() {
-  const [activeTab, setActiveTab] = useState("home");
-
+export default function App() {
   return (
-    <div className="container">
-      {/* LEFT */}
-      <div className="left">
-        <video autoPlay loop muted>
-          <source src="/light.mp4" type="video/mp4" />
-        </video>
-      </div>
+    <Routes>
+      {/* Public routes */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
 
-      {/* RIGHT */}
-      <div className="right">
-        {/* floating balls */}
-        <ul className="particles">
-          <li></li><li></li><li></li><li></li><li></li>
-          <li></li><li></li><li></li><li></li><li></li>
-        </ul>
+      {/* Protected route */}
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <CalendarPage />
+          </ProtectedRoute>
+        }
+      />
 
-        {/* Navigation Tabs */}
-        <div className="nav-tabs">
-          <button 
-            className={`tab-btn ${activeTab === "home" ? "active" : ""}`}
-            onClick={() => setActiveTab("home")}
-          >
-            🕐 Home
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === "calendar" ? "active" : ""}`}
-            onClick={() => setActiveTab("calendar")}
-          >
-            📅 Calendar
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === "alarms" ? "active" : ""}`}
-            onClick={() => setActiveTab("alarms")}
-          >
-            ⏰ Alarms
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === "notes" ? "active" : ""}`}
-            onClick={() => setActiveTab("notes")}
-          >
-            📝 Notes
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === "files" ? "active" : ""}`}
-            onClick={() => setActiveTab("files")}
-          >
-            📁 Files
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === "games" ? "active" : ""}`}
-            onClick={() => setActiveTab("games")}
-          >
-            🎮 Games
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="content">
-          {activeTab === "home" && (
-            <>
-              <Clock />
-              <SoundPicker />
-            </>
-          )}
-          
-          {activeTab === "calendar" && <CalendarPage />}
-          
-          {activeTab === "alarms" && <Alarm />}
-          
-          {activeTab === "notes" && <Notes />}
-          
-          {activeTab === "files" && <FileUpload />}
-          
-          {activeTab === "games" && <GamesHub />}
-        </div>
-      </div>
-    </div>
+      {/* Fallback */}
+      <Route path="*" element={<Login />} />
+    </Routes>
   );
 }
-
-export default App;

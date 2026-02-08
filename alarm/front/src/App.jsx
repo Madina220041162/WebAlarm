@@ -1,9 +1,42 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Link, useNavigate } from "react-router-dom";
+import { useAuth } from "./auth/AuthContext";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import CalendarPage from "./calendar/CalendarPage";
+import Alarm from "./pages/Alarm";
+import Notes from "./pages/Notes";
+import FileUpload from "./pages/FileUpload";
+import GamesHub from "./games/GamesHub";
+import "./App.css";
+
+function Navigation() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  return (
+    <nav className="navbar">
+      <div className="nav-brand">🕐 MurgiKlok</div>
+      <div className="nav-links">
+        <Link to="/">📅 Calendar</Link>
+        <Link to="/alarm">🔔 Alarm</Link>
+        <Link to="/notes">📝 Notes</Link>
+        <Link to="/files">📁 Files</Link>
+        <Link to="/games">🎮 Games</Link>
+      </div>
+      <div className="nav-user">
+        <span>{user?.username || user?.email || "User"}</span>
+        <button onClick={handleLogout} className="logout-btn">Logout</button>
+      </div>
+    </nav>
+  );
+}
 
 export default function App() {
   return (
@@ -13,12 +46,59 @@ export default function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
-      {/* Protected route */}
+      {/* Protected routes */}
       <Route
         path="/"
         element={
           <ProtectedRoute>
-            <CalendarPage />
+            <>
+              <Navigation />
+              <CalendarPage />
+            </>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/alarm"
+        element={
+          <ProtectedRoute>
+            <>
+              <Navigation />
+              <Alarm />
+            </>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notes"
+        element={
+          <ProtectedRoute>
+            <>
+              <Navigation />
+              <Notes />
+            </>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/files"
+        element={
+          <ProtectedRoute>
+            <>
+              <Navigation />
+              <FileUpload />
+            </>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/games"
+        element={
+          <ProtectedRoute>
+            <>
+              <Navigation />
+              <GamesHub />
+            </>
           </ProtectedRoute>
         }
       />

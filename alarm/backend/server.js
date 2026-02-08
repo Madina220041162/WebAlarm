@@ -7,6 +7,7 @@ const { connectDB } = require('./config/db');
 const notesRoutes = require('./routes/notesRoutes');
 const gameScoresRoutes = require('./routes/gameScoresRoutes');
 const fileRoutes = require('./routes/fileRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const http = require('http');
 const { Server } = require('socket.io');
@@ -26,6 +27,7 @@ app.get('/', (req, res) => {
 });
 
 // API routes
+app.use('/api/auth', userRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/game-scores', gameScoresRoutes);
 // Compatibility alias (accept requests without hyphen)

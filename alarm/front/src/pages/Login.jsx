@@ -8,17 +8,28 @@ import bgLight from "../assets/login/bg-light.png";
 import bgNight from "../assets/login/bg-night.png";
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, error } = useAuth();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [darkMode, setDarkMode] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [localError, setLocalError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    login(email, password);
-    navigate("/");
+    setLoading(true);
+    setLocalError("");
+
+    try {
+      await login(username, password);
+      navigate("/");
+    } catch (err) {
+      setLocalError(err.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -32,13 +43,18 @@ export default function Login() {
         <h1 className="title">MurgiKlok</h1>
         <h2>Sign In</h2>
 
+        {(localError || error) && (
+          <div className="error-message">{localError || error}</div>
+        )}
+
         <form onSubmit={handleSubmit}>
           <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             required
+            disabled={loading}
           />
 
           <input
@@ -47,14 +63,15 @@ export default function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            disabled={loading}
           />
 
           <label className="remember">
-            <input type="checkbox" /> Remember me
+            <input type="checkbox" disabled={loading} /> Remember me
           </label>
 
-          <button type="submit" className="btn primary">
-            Login
+          <button type="submit" className="btn primary" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
@@ -68,15 +85,22 @@ export default function Login() {
         <button
           className="btn google"
           onClick={() => alert("Google login coming soon")}
+          disabled={loading}
         >
           Login with Google
         </button>
 
         <button
-          className="btn mode"
+          type="button"
+          className="mode-toggle"
           onClick={() => setDarkMode(!darkMode)}
+          disabled={loading}
+          aria-label={`Switch to ${darkMode ? "light" : "dark"} mode`}
+          title={`Switch to ${darkMode ? "light" : "dark"} mode`}
         >
-          Switch to {darkMode ? "Light" : "Dark"} Mode
+          <span className="mode-icon" aria-hidden="true">
+            {darkMode ? "☀️" : "🌙"}
+          </span>
         </button>
       </div>
     </div>

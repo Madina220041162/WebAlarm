@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 import './Alarm.css';
+import alarmBg from '../assets/alarm-bg.mp4';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -137,6 +138,9 @@ export default function Alarm() {
 
   return (
     <div className="alarm-container">
+      <video className="alarm-bg" autoPlay muted loop playsInline src={alarmBg} />
+      <div className="alarm-overlay" />
+      <div className="alarm-content">
       <h1>⏰ Alarm Clock</h1>
 
       <form onSubmit={handleCreateAlarm} className="alarm-form">
@@ -204,6 +208,7 @@ export default function Alarm() {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 }

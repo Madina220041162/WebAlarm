@@ -1,6 +1,10 @@
 export default function CalendarHeader({
+  view,
+  setView,
   currentDate,
   setCurrentDate,
+  darkMode,
+  setDarkMode,
 }) {
   const monthYear = currentDate.toLocaleDateString("en-US", {
     month: "long",
@@ -24,23 +28,54 @@ export default function CalendarHeader({
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        marginBottom: "20px",
-      }}
-    >
-      <button onClick={goPrev}>◀</button>
+    <div className="calendar-header">
+      <h2>{monthYear}</h2>
 
-      <div style={{ fontSize: "20px", fontWeight: 600 }}>
-        {monthYear}
+      <button className="calendar-nav-btn" onClick={goPrev}>
+        ◀ Previous
+      </button>
+
+      <button className="calendar-nav-btn" onClick={goNext}>
+        Next ▶
+      </button>
+
+      <button className="calendar-nav-btn" onClick={goToday}>
+        Today
+      </button>
+
+      <div className="calendar-view-controls">
+        <button
+          className={`view-btn ${view === "day" ? "active" : ""}`}
+          onClick={() => setView("day")}
+        >
+          Day
+        </button>
+        <button
+          className={`view-btn ${view === "week" ? "active" : ""}`}
+          onClick={() => setView("week")}
+        >
+          Week
+        </button>
+        <button
+          className={`view-btn ${view === "month" ? "active" : ""}`}
+          onClick={() => setView("month")}
+        >
+          Month
+        </button>
+        <button
+          className={`view-btn ${view === "year" ? "active" : ""}`}
+          onClick={() => setView("year")}
+        >
+          Year
+        </button>
       </div>
 
-      <button onClick={goNext}>▶</button>
-
-      <button onClick={goToday}>Today</button>
+      <button
+        className="mode-toggle-btn"
+        onClick={() => setDarkMode(!darkMode)}
+      >
+        🌙 {darkMode ? "Light" : "Dark"} Mode
+      </button>
     </div>
   );
 }

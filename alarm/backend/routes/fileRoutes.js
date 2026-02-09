@@ -1,5 +1,6 @@
 const express = require("express");
 const fileController = require("../controllers/fileController");
+const authMiddleware = require("../middleware/authMiddleware");
 const multer = require("multer");
 const path = require("path");
 
@@ -39,8 +40,10 @@ const upload = multer({
   },
 });
 
-router.post("/", upload.single("file"), fileController.uploadFile);
-router.get("/", fileController.getUploadedFiles);
-router.delete("/:filename", fileController.deleteFile);
+// All file routes require authentication
+router.post("/", authMiddleware, upload.single("file"), fileController.uploadFile);
+router.get("/", authMiddleware, fileController.getUploadedFiles);
+router.get("/:fileId", authMiddleware, fileController.getFile);
+router.delete("/:fileId", authMiddleware, fileController.deleteFile);
 
 module.exports = router;

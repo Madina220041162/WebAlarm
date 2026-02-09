@@ -8,6 +8,8 @@ const notesRoutes = require('./routes/notesRoutes');
 const gameScoresRoutes = require('./routes/gameScoresRoutes');
 const fileRoutes = require('./routes/fileRoutes');
 const userRoutes = require('./routes/userRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
+const calendarRoutes = require('./routes/calendarRoutes');
 
 const http = require('http');
 const { Server } = require('socket.io');
@@ -28,11 +30,13 @@ app.get('/', (req, res) => {
 
 // API routes
 app.use('/api/auth', userRoutes);
+app.use('/api/settings', settingsRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/game-scores', gameScoresRoutes);
 // Compatibility alias (accept requests without hyphen)
 app.use('/api/gamescores', gameScoresRoutes);
 app.use('/api/files', fileRoutes);
+app.use('/api/calendar', calendarRoutes);
 app.use('/api/alarms', alarmRoutes);
 
 const PORT = process.env.PORT || 5000;

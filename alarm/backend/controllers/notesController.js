@@ -1,11 +1,13 @@
 const Note = require('../models/Note');
 
-// Get all notes
+// Get all notes for the current user
 exports.getAllNotes = async (req, res) => {
   try {
-    const notes = await Note.find().sort({ updatedAt: -1 }).lean();
+    const userId = req.userId;
+    const notes = await Note.find({ userId }).sort({ createdAt: -1 }).lean();
     res.status(200).json(notes);
   } catch (error) {
+    console.error('Get notes error:', error);
     res.status(500).json({ message: 'Error reading notes', error: error.message });
   }
 };
@@ -13,21 +15,27 @@ exports.getAllNotes = async (req, res) => {
 // Create a new note
 exports.createNote = async (req, res) => {
   try {
-    const { title, content, tags } = req.body;
+    const userId = req.userId;
+    const { title, content, tags, color } = req.body;
+
     if (!title || !content) {
       return res.status(400).json({ message: 'Title and content are required' });
     }
 
     const newNote = new Note({
-      userId: req.userId || undefined,
+      userId,
       title,
       content,
       tags: tags || [],
+      color: color || '#FFE8A8',
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
     await newNote.save();
     res.status(201).json({ message: 'Note created', note: newNote });
   } catch (error) {
+    console.error('Create note error:', error);
     res.status(500).json({ message: 'Error creating note', error: error.message });
   }
 };
@@ -36,10 +44,16 @@ exports.createNote = async (req, res) => {
 exports.getNote = async (req, res) => {
   try {
     const { id } = req.params;
-    const note = await Note.findById(id).lean();
-    if (!note) return res.status(404).json({ message: 'Note not found' });
+    const userId = req.userId;
+    
+    const note = await Note.findOne({ _id: id, userId }).lean();
+    if (!note) {
+      return res.status(404).json({ message: 'Note not found' });
+    }
+    
     res.status(200).json(note);
   } catch (error) {
+    console.error('Get note error:', error);
     res.status(500).json({ message: 'Error retrieving note', error: error.message });
   }
 };
@@ -48,19 +62,24 @@ exports.getNote = async (req, res) => {
 exports.updateNote = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, content, tags } = req.body;
+    const userId = req.userId;
+    const { title, content, tags, color } = req.body;
 
-    const note = await Note.findById(id);
-    if (!note) return res.status(404).json({ message: 'Note not found' });
+    const note = await Note.findOne({ _id: id, userId });
+    if (!note) {
+      return res.status(404).json({ message: 'Note not found' });
+    }
 
-    note.title = title || note.title;
-    note.content = content || note.content;
-    note.tags = tags !== undefined ? tags : note.tags;
+    if (title) note.title = title;
+    if (content) note.content = content;
+    if (tags !== undefined) note.tags = tags;
+    if (color) note.color = color;
     note.updatedAt = new Date();
 
     await note.save();
     res.status(200).json({ message: 'Note updated', note });
   } catch (error) {
+    console.error('Update note error:', error);
     res.status(500).json({ message: 'Error updating note', error: error.message });
   }
 };
@@ -69,9 +88,16 @@ exports.updateNote = async (req, res) => {
 exports.deleteNote = async (req, res) => {
   try {
     const { id } = req.params;
-    await Note.findByIdAndDelete(id);
+    const userId = req.userId;
+    
+    const note = await Note.findOneAndDelete({ _id: id, userId });
+    if (!note) {
+      return res.status(404).json({ message: 'Note not found' });
+    }
+    
     res.status(200).json({ message: 'Note deleted' });
   } catch (error) {
+    console.error('Delete note error:', error);
     res.status(500).json({ message: 'Error deleting note', error: error.message });
   }
 };

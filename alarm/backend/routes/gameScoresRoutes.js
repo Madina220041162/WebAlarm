@@ -1,14 +1,21 @@
 const express = require("express");
 const gameScoreController = require("../controllers/gameScoreController");
+const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// Return all game scores (compatibility endpoint)
-router.get("/", gameScoreController.getAllScores);
+// Protected routes - must come BEFORE generic /:gameType routes
+router.get("/user/all", authMiddleware, gameScoreController.getUserAllScores);
+router.get("/user/:gameType/best", authMiddleware, gameScoreController.getUserBestScore);
+router.get("/user/:gameType", authMiddleware, gameScoreController.getUserGameScores);
+router.post("/:gameType", authMiddleware, gameScoreController.saveGameScore);
 
-// Routes by game type
+// Public routes - get global leaderboards and scores
+router.get("/", gameScoreController.getAllScores);
+router.get("/:gameType/leaderboard", gameScoreController.getLeaderboard);
 router.get("/:gameType", gameScoreController.getGameScores);
-router.post("/:gameType", gameScoreController.saveGameScore);
-router.get("/:gameType/high", gameScoreController.getHighScores);
+
+// Delete route (protected)
+router.delete("/:scoreId", authMiddleware, gameScoreController.deleteGameScore);
 
 module.exports = router;

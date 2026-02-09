@@ -5,7 +5,7 @@ const FileMetaSchema = new mongoose.Schema({
   url: { type: String, required: true },
   size: { type: Number, required: true },
   mimetype: { type: String, required: true },
-  userId: { type: String, required: false },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   uploadedAt: { type: Date, default: Date.now },
 });
 

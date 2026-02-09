@@ -10,7 +10,7 @@ export function AuthProvider({ children }) {
 
   // Load user from localStorage on mount
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
+    const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
     if (token && userData) {
       setUser(JSON.parse(userData));
@@ -36,7 +36,7 @@ export function AuthProvider({ children }) {
       const { token, user } = data;
 
       // Store token and user
-      localStorage.setItem("authToken", token);
+      localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
       setUser(user);
 
@@ -65,7 +65,7 @@ export function AuthProvider({ children }) {
       const { token, user } = data;
 
       // Store token and user
-      localStorage.setItem("authToken", token);
+      localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
       setUser(user);
 
@@ -77,7 +77,7 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
-    localStorage.removeItem("authToken");
+    localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
   };

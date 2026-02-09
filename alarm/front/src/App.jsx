@@ -1,5 +1,6 @@
 import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
+import { useTheme } from "./theme/ThemeContext";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -14,6 +15,7 @@ import "./App.css";
 
 function Navigation() {
   const { user, logout } = useAuth();
+  const { isDarkMode, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -33,6 +35,13 @@ function Navigation() {
         <Link to="/games">🎮 Games</Link>
       </div>
       <div className="nav-user">
+        <button 
+          onClick={toggleTheme} 
+          className="theme-toggle-btn"
+          title={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
+        >
+          {isDarkMode ? '☀️' : '🌙'}
+        </button>
         <span>{user?.username || user?.email || "User"}</span>
         <button onClick={handleLogout} className="logout-btn">Logout</button>
       </div>

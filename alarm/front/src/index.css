@@ -78,6 +78,37 @@ button:focus-visible {
   box-shadow: var(--ring);
 }
 
+/* Dark Mode */
+.dark-mode {
+  --sky: #1a1a2e;
+  --cream: #2d2d44;
+  --cream-2: #3a3a51;
+  --wood: #4a4a6a;
+  --wood-deep: #5a5a7a;
+  --ink: #e0e0e0;
+  --muted: #b0b0c0;
+  --accent: #ff9500;
+  --accent-2: #ff6b6b;
+  --mint: #4ecdc4;
+  --border: #4a5a6a;
+  --surface: #252542;
+  --shadow: 0 10px 26px rgba(0, 0, 0, 0.4);
+  --ring: 0 0 0 4px rgba(255, 149, 0, 0.28);
+
+  background:
+    radial-gradient(1200px 700px at 15% -10%, #1a2a3a 0%, transparent 60%),
+    radial-gradient(1000px 650px at 110% 5%, #1a3a2a 0%, transparent 55%),
+    linear-gradient(180deg, #1a1a2e 0%, #1a2a3e 60%, #1a2a4e 100%);
+  color: var(--ink);
+}
+
+.dark-mode body {
+  background:
+    radial-gradient(1200px 700px at 15% -10%, #1a2a3a 0%, transparent 60%),
+    radial-gradient(1000px 650px at 110% 5%, #1a3a2a 0%, transparent 55%),
+    linear-gradient(180deg, #1a1a2e 0%, #1a2a3e 60%, #1a2a4e 100%);
+}
+
 code,
 pre {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;

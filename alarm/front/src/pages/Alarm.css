@@ -1,27 +1,14 @@
 .alarm-container {
   position: relative;
-  padding: 32px 20px;
-  max-width: 900px;
-  margin: 0 auto;
-  min-height: 100vh;
-}
-
-.alarm-bg {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 0;
-  filter: saturate(1.05) contrast(1.02);
-}
-
-.alarm-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(255, 250, 240, 0.65);
-  backdrop-filter: blur(3px);
-  z-index: 1;
+  padding: 32px 30px;
+  width: 80%;
+  max-width: 1100px;
+  margin: 24px auto;
+  min-height: 80vh;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
 }
 
 .alarm-content {
@@ -30,23 +17,32 @@
 }
 
 .alarm-container h1 {
-  color: #513028;
-  margin-bottom: 20px;
+  color: #61dafb;
+  margin-bottom: 30px;
   text-align: center;
-  text-shadow: 2px 2px 0 rgba(255, 227, 166, 0.7);
+  font-size: 36px;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(97, 218, 251, 0.2);
+}
+
+.error-message {
+  background: rgba(255, 69, 69, 0.3);
+  color: #ff8585;
+  padding: 12px 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  border-left: 4px solid #ff4545;
 }
 
 .alarm-form {
-  background: rgba(255, 250, 240, 0.95);
-  border: 3px solid #7c4740;
-  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(97, 218, 251, 0.3);
+  border-radius: 10px;
   padding: 20px;
   margin-bottom: 30px;
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
+  display: flex;
+  flex-direction: column;
   gap: 15px;
-  align-items: flex-end;
-  box-shadow: 0 10px 26px rgba(81, 48, 40, 0.18);
 }
 
 .form-group {
@@ -56,57 +52,153 @@
 
 .form-group label {
   font-weight: 700;
-  margin-bottom: 5px;
-  color: #6d4a3f;
+  margin-bottom: 10px;
+  color: #eaf8ff;
+  font-size: 15px;
 }
 
-.form-group input {
-  padding: 10px;
-  border: 2px solid #7c4740;
-  border-radius: 12px;
-  font-size: 14px;
-  background: #fff0c7;
-  color: #513028;
+.form-group input,
+.form-group select {
+  padding: 12px;
+  border: 1px solid rgba(97, 218, 251, 0.5);
+  border-radius: 6px;
+  font-size: 15px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #f6f8f9;
+  transition: all 0.3s ease;
 }
 
-.form-group input:focus {
+.form-group input:focus,
+.form-group select:focus {
   outline: none;
-  border-color: #ffb84d;
-  box-shadow: 0 0 0 4px rgba(255, 184, 77, 0.3);
+  border-color: #61dafb;
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 10px rgba(97, 218, 251, 0.3);
 }
 
-.alarm-form button {
-  background: linear-gradient(180deg, #ffcb6b 0%, #ffb84d 100%);
-  color: #513028;
-  padding: 10px 20px;
-  border: 2px solid #7c4740;
-  border-radius: 14px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  font-weight: 700;
+.form-group input::placeholder {
+  color: rgba(246, 248, 249, 0.6);
 }
 
-.alarm-form button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 18px rgba(81, 48, 40, 0.2);
+.form-group select option {
+  background: #1a1a2e;
+  color: #fff;
 }
 
-.alarm-form button:disabled {
-  background: #ccc;
+.form-group input:disabled,
+.form-group select:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
+.days-selector {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.day-btn {
+  padding: 10px;
+  background: rgba(97, 218, 251, 0.2);
+  border: 2px solid #61dafb;
+  border-radius: 5px;
+  color: #61dafb;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  transition: all 0.3s ease;
+}
+
+.day-btn:hover:not(:disabled) {
+  background: rgba(97, 218, 251, 0.3);
+  border-color: #fff;
+}
+
+.day-btn.selected {
+  background: #61dafb;
+  color: #0a0e27;
+  border-color: #fff;
+}
+
+.day-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.form-group small {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.btn-create,
+.btn-cancel {
+  padding: 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.btn-create {
+  background: linear-gradient(135deg, #61dafb, #3dd5f3);
+  color: #fff;
+}
+
+.btn-create:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(97, 218, 251, 0.4);
+}
+
+.btn-cancel {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.btn-create:disabled,
+.btn-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.alarms-list {
+  margin-top: 30px;
+}
+
 .alarms-list h2 {
-  color: #513028;
-  margin-bottom: 15px;
+  color: #61dafb;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.alarms-list h2 span {
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .empty-state {
   text-align: center;
-  color: #999;
-  padding: 40px;
-  font-style: italic;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 40px 20px;
+  font-size: 16px;
 }
 
 .alarms-grid {
@@ -116,118 +208,182 @@
 }
 
 .alarm-card {
-  background: rgba(255, 250, 240, 0.95);
-  border: 3px solid #7c4740;
-  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(97, 218, 251, 0.3);
+  border-radius: 10px;
   padding: 15px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .alarm-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
-}
-
-.alarm-card.triggered {
-  border-color: #7bb661;
-  background: #f1fff1;
+  border-color: #61dafb;
+  background: rgba(0, 0, 0, 0.4);
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(97, 218, 251, 0.2);
 }
 
 .alarm-card.disabled {
-  opacity: 0.7;
-  background: #f5efe3;
+  opacity: 0.6;
 }
 
 .alarm-time {
-  font-size: 24px;
-  font-weight: 800;
-  color: #7bb661;
-  margin-bottom: 5px;
+  font-size: 28px;
+  font-weight: bold;
+  color: #61dafb;
+  margin-bottom: 8px;
 }
 
 .alarm-label {
   font-size: 16px;
-  color: #333;
-  margin-bottom: 5px;
+  color: #f6f8f9;
+  margin-bottom: 8px;
   min-height: 20px;
+  font-weight: 500;
 }
 
-.alarm-date {
-  font-size: 12px;
-  color: #999;
+.alarm-days {
+  display: flex;
+  gap: 4px;
   margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.day-badge {
+  background: rgba(97, 218, 251, 0.2);
+  border: 1px solid #61dafb;
+  color: #61dafb;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.alarm-sound {
+  font-size: 13px;
+  color: #d0d0d0;
+  margin-bottom: 10px;
+  font-weight: 500;
 }
 
 .alarm-status {
   font-size: 12px;
-  font-weight: 700;
-  color: #6d4a3f;
-  padding: 5px 10px;
-  background: #fff0c7;
-  border-radius: 10px;
-  margin-bottom: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 8px 10px;
+  background: rgba(97, 218, 251, 0.1);
+  border-radius: 5px;
+  margin-bottom: 12px;
   text-align: center;
-  border: 2px solid #7c4740;
-}
-
-.alarm-card.triggered .alarm-status {
-  background: #c8e6c9;
-  color: #2e7d32;
+  border: 1px solid rgba(97, 218, 251, 0.3);
 }
 
 .alarm-actions {
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .btn-toggle,
+.btn-edit,
 .btn-delete {
   flex: 1;
-  padding: 8px 12px;
+  padding: 8px 10px;
   border: none;
   border-radius: 4px;
   font-size: 12px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
+  font-weight: 500;
 }
 
-.btn-toggle.enabled {
-  background: #7bb661;
-  color: white;
+.btn-toggle {
+  background: rgba(97, 218, 251, 0.3);
+  color: #61dafb;
+  border: 1px solid #61dafb;
 }
 
-.btn-toggle.enabled:hover {
-  background: #45a049;
+.btn-toggle:hover:not(:disabled) {
+  background: rgba(97, 218, 251, 0.5);
 }
 
 .btn-toggle.disabled {
-  background: #fff0c7;
-  color: #6d4a3f;
-  border: 2px solid #7c4740;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
-.btn-toggle.disabled:hover {
-  background: #e0e0e0;
+.btn-edit {
+  background: rgba(76, 175, 80, 0.3);
+  color: #4caf50;
+  border: 1px solid #4caf50;
+}
+
+.btn-edit:hover:not(:disabled) {
+  background: rgba(76, 175, 80, 0.5);
 }
 
 .btn-delete {
-  background: #ff9f80;
-  color: #513028;
-  border: 2px solid #7c4740;
+  background: rgba(255, 69, 69, 0.3);
+  color: #ff4545;
+  border: 1px solid #ff4545;
   flex: 0 1 auto;
+  padding: 8px;
 }
 
-.btn-delete:hover {
-  background: #da190b;
+.btn-delete:hover:not(:disabled) {
+  background: rgba(255, 69, 69, 0.5);
+}
+
+.btn-toggle:disabled,
+.btn-edit:disabled,
+.btn-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive design */
+@media (max-width: 900px) {
+  .alarm-container {
+    width: 90%;
+    padding: 20px;
+    margin: 16px auto;
+  }
 }
 
 @media (max-width: 600px) {
+  .alarm-container {
+    width: 96%;
+    padding: 12px 10px;
+    margin: 10px auto;
+  }
+
+  .alarm-container h1 {
+    font-size: 24px;
+  }
+
   .alarm-form {
-    grid-template-columns: 1fr;
+    padding: 15px;
+  }
+
+  .days-selector {
+    grid-template-columns: repeat(3, 1fr);
   }
 
   .alarms-grid {
     grid-template-columns: 1fr;
+  }
+
+  .alarm-card {
+    padding: 12px;
+  }
+
+  .alarm-time {
+    font-size: 24px;
+  }
+
+  .alarm-label {
+    font-size: 14px;
   }
 }

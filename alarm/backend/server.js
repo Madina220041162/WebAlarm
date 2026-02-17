@@ -18,7 +18,29 @@ const { startAlarmScheduler } = require('./utils/alarmScheduler');
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Current browser implementation of CORS sends 'null' for local files sometimes, 
+    // or no origin for server-to-server requests
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.indexOf(origin) === -1) {
+      // For development, you might want to log this to see what's being blocked
+      console.log('Blocked by CORS:', origin);
+      // In strict production, we block. For now, let's allow to debug if needed, 
+      // or strictly block if we are sure about CLIENT_URL.
+      // return callback(new Error('not allowed by CORS'));
+    }
+    return callback(null, true);
+  },
+  credentials: true
+}));
 app.use(express.json());
 
 // Serve uploaded files as static content

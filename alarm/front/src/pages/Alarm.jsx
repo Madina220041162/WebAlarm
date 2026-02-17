@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 import { alarmsAPI, getAuthToken } from '../services/api';
 import './Alarm.css';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export default function Alarm() {
   const [alarms, setAlarms] = useState([]);
@@ -40,7 +40,7 @@ export default function Alarm() {
     socketRef.current.on('alarmTriggered', (data) => {
       console.log('Alarm triggered:', data);
       playAlarmSound(data.soundId);
-      
+
       // Set active ringing alarm - user must win a game to dismiss it
       const activeAlarm = {
         id: data._id || data.id,
@@ -48,7 +48,7 @@ export default function Alarm() {
         time: new Date().toISOString(),
       };
       localStorage.setItem('activeRingingAlarm', JSON.stringify(activeAlarm));
-      
+
       setError(`🔔 ALARM! Win a game to stop it: ${data.label}`);
       fetchAlarms();
     });
@@ -108,7 +108,7 @@ export default function Alarm() {
 
   const handleCreateAlarm = async (e) => {
     e.preventDefault();
-    
+
     if (!time) {
       setError('Please select a time');
       return;
@@ -285,8 +285,8 @@ export default function Alarm() {
             {loading
               ? 'Creating...'
               : editingId
-              ? 'Update Alarm'
-              : 'Create Alarm'}
+                ? 'Update Alarm'
+                : 'Create Alarm'}
           </button>
 
           {editingId && (
@@ -314,9 +314,8 @@ export default function Alarm() {
               {alarms.map((alarm) => (
                 <div
                   key={alarm._id}
-                  className={`alarm-card ${
-                    !alarm.isEnabled ? 'disabled' : ''
-                  }`}
+                  className={`alarm-card ${!alarm.isEnabled ? 'disabled' : ''
+                    }`}
                 >
                   <div className="alarm-time">
                     {formatAlarmTime(alarm.time)}
@@ -346,9 +345,8 @@ export default function Alarm() {
                   <div className="alarm-actions">
                     <button
                       onClick={() => handleToggleAlarm(alarm._id)}
-                      className={`btn-toggle ${
-                        alarm.isEnabled ? 'enabled' : 'disabled'
-                      }`}
+                      className={`btn-toggle ${alarm.isEnabled ? 'enabled' : 'disabled'
+                        }`}
                       disabled={loading}
                     >
                       {alarm.isEnabled ? '✓ On' : 'Off'}
@@ -377,4 +375,3 @@ export default function Alarm() {
     </div>
   );
 }
- 

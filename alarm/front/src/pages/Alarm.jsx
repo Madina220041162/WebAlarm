@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 import './Alarm.css';
 import alarmBg from '../assets/alarm-bg.mp4';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Alarm() {
   const [alarms, setAlarms] = useState([]);

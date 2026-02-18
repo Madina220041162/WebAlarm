@@ -9,7 +9,7 @@ const Notes = () => {
   const [editingId, setEditingId] = useState(null);
   const [filter, setFilter] = useState("");
 
-  const API_URL = "http://localhost:5000/api/notes";
+  const API_URL = import.meta.env.VITE_API_URL + "/api/notes";
 
   // Fetch notes on component mount
   useEffect(() => {

@@ -16,7 +16,19 @@ const { startAlarmScheduler } = require('./utils/alarmScheduler');
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "http://localhost:5173"
+];
+
+app.use(cors({
+  origin: function(origin, cb) {
+    if (!origin) return cb(null, true);
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error("CORS blocked: " + origin));
+  },
+  credentials: true
+}));
 app.use(express.json());
 
 // Serve uploaded files as static content

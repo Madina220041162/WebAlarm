@@ -7,7 +7,7 @@ const FileUpload = () => {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(null);
 
-  const API_URL = "http://localhost:5000/api/files";
+  const API_URL = import.meta.env.VITE_API_URL + "/api/files";
 
   useEffect(() => {
     fetchFiles();

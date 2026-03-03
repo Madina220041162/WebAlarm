@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import io from "socket.io-client";
 
 const AuthContext = createContext(null);
 const API_URL = import.meta.env.VITE_API_URL + "/api/auth";
@@ -92,3 +93,5 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   return useContext(AuthContext);
 }
+
+

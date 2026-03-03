@@ -3,8 +3,6 @@ export default function CalendarHeader({
   setView,
   currentDate,
   setCurrentDate,
-  darkMode,
-  setDarkMode,
 }) {
   const monthYear = currentDate.toLocaleDateString("en-US", {
     month: "long",
@@ -28,54 +26,45 @@ export default function CalendarHeader({
   }
 
   return (
-    <div className="calendar-header">
-      <h2>{monthYear}</h2>
-
-      <button className="calendar-nav-btn" onClick={goPrev}>
-        ◀ Previous
-      </button>
-
-      <button className="calendar-nav-btn" onClick={goNext}>
-        Next ▶
-      </button>
-
-      <button className="calendar-nav-btn" onClick={goToday}>
-        Today
-      </button>
-
-      <div className="calendar-view-controls">
-        <button
-          className={`view-btn ${view === "day" ? "active" : ""}`}
-          onClick={() => setView("day")}
-        >
-          Day
-        </button>
-        <button
-          className={`view-btn ${view === "week" ? "active" : ""}`}
-          onClick={() => setView("week")}
-        >
-          Week
-        </button>
-        <button
-          className={`view-btn ${view === "month" ? "active" : ""}`}
-          onClick={() => setView("month")}
-        >
-          Month
-        </button>
-        <button
-          className={`view-btn ${view === "year" ? "active" : ""}`}
-          onClick={() => setView("year")}
-        >
-          Year
-        </button>
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+      <div className="flex items-center gap-6">
+        <h2 className="text-2xl font-black text-slate-900 tracking-tight">{monthYear}</h2>
+        <div className="flex gap-2">
+          <button
+            className="size-10 rounded-xl glass-pill flex items-center justify-center text-slate-400 hover:text-primary transition-all"
+            onClick={goPrev}
+          >
+            <span className="material-symbols-outlined">chevron_left</span>
+          </button>
+          <button
+            className="size-10 rounded-xl glass-pill flex items-center justify-center text-slate-400 hover:text-primary transition-all"
+            onClick={goNext}
+          >
+            <span className="material-symbols-outlined">chevron_right</span>
+          </button>
+          <button
+            className="px-4 py-2 rounded-xl glass-pill text-xs font-black uppercase tracking-widest text-slate-500 hover:text-primary"
+            onClick={goToday}
+          >
+            Today
+          </button>
+        </div>
       </div>
 
-      <button
-        className="mode-toggle-btn"
-        onClick={() => setDarkMode(!darkMode)}
-      >
-        🌙 {darkMode ? "Light" : "Dark"} Mode
-      </button>
+      <div className="flex p-1.5 bg-slate-100/50 rounded-2xl">
+        {["day", "week", "month", "year"].map((v) => (
+          <button
+            key={v}
+            className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${view === v
+                ? "bg-white text-primary shadow-sm"
+                : "text-slate-400 hover:text-slate-600"
+              }`}
+            onClick={() => setView(v)}
+          >
+            {v}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

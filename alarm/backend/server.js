@@ -27,7 +27,9 @@ app.use(cors({
     if (allowedOrigins.includes(origin)) return cb(null, true);
     return cb(new Error("CORS blocked: " + origin));
   },
-  credentials: true
+  credentials: true,
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+  allowedHeaders: "Origin,X-Requested-With,Content-Type,Accept,Authorization"
 }));
 app.use(express.json());
 
@@ -54,7 +56,13 @@ const serverStart = async () => {
 
   // Create HTTP server and attach Socket.IO
   const server = http.createServer(app);
-  const io = new Server(server, { cors: { origin: process.env.CLIENT_URL || '*' } });
+  const io = new Server(server, {
+    cors: {
+      origin: allowedOrigins,
+      credentials: true,
+      methods: ["GET", "POST"]
+    }
+  });
 
   io.on('connection', (socket) => {
     console.log('Client connected to Socket.IO', socket.id);

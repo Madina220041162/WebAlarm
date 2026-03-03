@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import "./FileUpload.css";
 
 const FileUpload = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -29,13 +28,9 @@ const FileUpload = () => {
     const file = e.target.files[0];
     if (file) {
       setSelectedFile(file);
-
-      // Create preview for images
       if (file.type.startsWith("image/")) {
         const reader = new FileReader();
-        reader.onload = (event) => {
-          setPreview(event.target.result);
-        };
+        reader.onload = (event) => setPreview(event.target.result);
         reader.readAsDataURL(file);
       } else {
         setPreview(null);
@@ -44,149 +39,138 @@ const FileUpload = () => {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) {
-      alert("Please select a file first");
-      return;
-    }
-
+    if (!selectedFile) return;
     setUploading(true);
     const formData = new FormData();
     formData.append("file", selectedFile);
-
     try {
       const response = await fetch(API_URL, {
         method: "POST",
         body: formData,
       });
-
       if (response.ok) {
-        const result = await response.json();
         setSelectedFile(null);
         setPreview(null);
         fetchFiles();
-        alert("File uploaded successfully!");
-      } else {
-        alert("Upload failed. Please check if file format is supported.");
       }
     } catch (error) {
       console.error("Error uploading file:", error);
-      alert("Error uploading file");
     } finally {
       setUploading(false);
     }
   };
 
   const handleDelete = async (filename) => {
-    if (window.confirm("Are you sure you want to delete this file?")) {
-      try {
-        const response = await fetch(`${API_URL}/${filename}`, {
-          method: "DELETE",
-        });
-
-        if (response.ok) {
-          fetchFiles();
-        }
-      } catch (error) {
-        console.error("Error deleting file:", error);
-      }
+    if (!window.confirm("Destroy this evidence?")) return;
+    try {
+      const response = await fetch(`${API_URL}/${filename}`, { method: "DELETE" });
+      if (response.ok) fetchFiles();
+    } catch (error) {
+      console.error("Error deleting file:", error);
     }
   };
 
   return (
-    <div className="file-upload-container">
-      <h2>📁 File Upload</h2>
+    <div className="space-y-12 animate-in fade-in zoom-in duration-500 max-w-6xl pb-20">
+      <div className="grid grid-cols-12 gap-8">
+        {/* Upload Zone */}
+        <div className="col-span-12 lg:col-span-4">
+          <div className="glass-card p-8 rounded-xl sticky top-8 text-center">
+            <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center justify-center gap-3">
+              <span className="material-symbols-outlined text-primary">upload_file</span>
+              Evidence Locker
+            </h3>
 
-      {/* Upload Section */}
-      <div className="upload-section">
-        <div className="file-input-wrapper">
-          <input
-            type="file"
-            id="file-input"
-            onChange={handleFileChange}
-            disabled={uploading}
-            accept="image/*,.pdf,.txt,.doc,.docx"
-          />
-          <label htmlFor="file-input" className="file-label">
-            📷 Choose File (Images, PDF, Documents)
-          </label>
+            <div className="relative group mb-8">
+              <input
+                type="file"
+                id="file-input"
+                className="hidden"
+                onChange={handleFileChange}
+                disabled={uploading}
+              />
+              <label
+                htmlFor="file-input"
+                className="block p-10 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 hover:bg-white hover:border-primary transition-all cursor-pointer group-hover:shadow-inner"
+              >
+                {preview ? (
+                  <img src={preview} alt="Preview" className="w-full aspect-video rounded-xl object-cover shadow-lg mb-4" />
+                ) : (
+                  <span className="material-symbols-outlined text-5xl text-slate-300 mb-4 block group-hover:scale-110 transition-transform">add_a_photo</span>
+                )}
+                <span className="text-xs font-black uppercase tracking-widest text-slate-400 group-hover:text-primary">
+                  {selectedFile ? selectedFile.name : "Select Payload"}
+                </span>
+              </label>
+            </div>
+
+            {selectedFile && (
+              <div className="mb-8 p-4 rounded-xl bg-white/40 border border-slate-100 text-left">
+                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Payload Size</p>
+                <p className="text-sm font-bold text-slate-700">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+              </div>
+            )}
+
+            <button
+              onClick={handleUpload}
+              disabled={uploading || !selectedFile}
+              className="w-full py-5 bg-primary text-white rounded-2xl font-black shadow-xl shadow-primary/30 hover:shadow-primary/40 transition-all disabled:opacity-50 disabled:grayscale"
+            >
+              {uploading ? "Deploying..." : "Upload Evidence →"}
+            </button>
+          </div>
         </div>
 
-        {preview && (
-          <div className="preview-section">
-            <p>Preview:</p>
-            <img src={preview} alt="Preview" className="file-preview" />
+        {/* Files Grid */}
+        <div className="col-span-12 lg:col-span-8">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-xl font-black text-slate-900">Stored Payloads ({files.length})</h3>
           </div>
-        )}
 
-        {selectedFile && (
-          <div className="selected-file-info">
-            <p>
-              <strong>Selected:</strong> {selectedFile.name}
-            </p>
-            <p>
-              <strong>Size:</strong>{" "}
-              {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-            </p>
-          </div>
-        )}
-
-        <button
-          onClick={handleUpload}
-          className={`btn-upload ${uploading ? "disabled" : ""}`}
-          disabled={uploading}
-        >
-          {uploading ? "🔄 Uploading..." : "⬆️ Upload File"}
-        </button>
-      </div>
-
-      {/* Files List */}
-      <div className="files-section">
-        <h3>Uploaded Files ({files.length})</h3>
-        {files.length === 0 ? (
-          <p className="no-files">No files uploaded yet</p>
-        ) : (
-          <div className="files-grid">
-            {files.map((file) => (
-              <div key={file.filename} className="file-item">
-                {file.filename.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/) ? (
-                  <img
-                    src={file.url}
-                    alt={file.filename}
-                    className="file-thumbnail"
-                  />
-                ) : (
-                  <div className="file-icon">
-                    {file.filename.toLowerCase().endsWith(".pdf") && "📄"}
-                    {file.filename.toLowerCase().endsWith(".txt") && "📝"}
-                    {file.filename.toLowerCase().endsWith(".doc") ||
-                      (file.filename.toLowerCase().endsWith(".docx") && "📘")}
-                  </div>
-                )}
-                <p className="file-name">{file.filename}</p>
-                <p className="file-size">
-                  {(file.size / 1024).toFixed(2)} KB
-                </p>
-                <div className="file-actions">
-                  <a
-                    href={file.url}
-                    download
-                    className="btn-download"
-                    title="Download"
-                  >
-                    ⬇️ Download
-                  </a>
-                  <button
-                    onClick={() => handleDelete(file.filename)}
-                    className="btn-remove"
-                    title="Delete"
-                  >
-                    🗑️ Remove
-                  </button>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {files.length === 0 ? (
+              <div className="col-span-full glass-card p-20 rounded-xl text-center">
+                <span className="material-symbols-outlined text-6xl text-slate-200 mb-4">inventory_2</span>
+                <p className="font-bold text-slate-400">No secret files found in the grid.</p>
               </div>
-            ))}
+            ) : (
+              files.map((file) => (
+                <div key={file.filename} className="glass-card group overflow-hidden rounded-xl animate-in slide-in-from-right duration-300">
+                  <div className="aspect-video relative bg-slate-100 overflow-hidden">
+                    {file.filename.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                      <img src={file.url} alt={file.filename} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-300">
+                        <span className="material-symbols-outlined text-6xl">description</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6 gap-3">
+                      <a
+                        href={file.url}
+                        download
+                        className="flex-1 py-3 bg-white text-slate-900 rounded-xl font-black text-xs text-center shadow-lg hover:bg-primary hover:text-white transition-all"
+                      >
+                        Download
+                      </a>
+                      <button
+                        onClick={() => handleDelete(file.filename)}
+                        className="size-10 rounded-xl bg-danger text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                      >
+                        <span className="material-symbols-outlined text-xl">delete</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <h4 className="font-black text-slate-900 truncate mb-1" title={file.filename}>{file.filename}</h4>
+                    <p className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                      {(file.size / 1024).toFixed(2)} KB • {new Date().toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

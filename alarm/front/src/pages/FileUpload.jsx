@@ -1,12 +1,27 @@
 import React, { useState, useEffect } from "react";
+import { filesAPI, getAuthToken } from "../services/api";
+import "./FileUpload.css";
 
 const FileUpload = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [preview, setPreview] = useState(null);
+  const [dragActive, setDragActive] = useState(false);
 
-  const API_URL = import.meta.env.VITE_API_URL + "/api/files";
+  const ALLOWED_SIZE = 50 * 1024 * 1024; // 50MB
+  const ALLOWED_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "application/pdf",
+    "text/plain",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ];
 
   useEffect(() => {
     fetchFiles();
@@ -14,158 +29,274 @@ const FileUpload = () => {
 
   const fetchFiles = async () => {
     try {
-      const response = await fetch(API_URL);
-      if (response.ok) {
-        const data = await response.json();
-        setFiles(data);
+      setLoading(true);
+      setError("");
+
+      if (!getAuthToken()) {
+        setError("Please login to view files");
+        return;
       }
+
+      const data = await filesAPI.getAll();
+      setFiles(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching files:", error);
+      setError(error.message || "Error loading files");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const validateFile = (file) => {
+    if (file.size > ALLOWED_SIZE) {
+      setError(`File size exceeds 50MB limit`);
+      return false;
+    }
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setError(`File type not allowed. Supported: Images, PDF, Text, Word`);
+      return false;
+    }
+    return true;
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setSelectedFile(file);
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onload = (event) => setPreview(event.target.result);
-        reader.readAsDataURL(file);
+      setError("");
+      if (validateFile(file)) {
+        setSelectedFile(file);
+
+        // Create preview for images
+        if (file.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            setPreview(event.target.result);
+          };
+          reader.readAsDataURL(file);
+        } else {
+          setPreview(null);
+        }
       } else {
+        setSelectedFile(null);
         setPreview(null);
+      }
+    }
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      setError("");
+      if (validateFile(file)) {
+        setSelectedFile(file);
+
+        if (file.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            setPreview(event.target.result);
+          };
+          reader.readAsDataURL(file);
+        } else {
+          setPreview(null);
+        }
       }
     }
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) return;
-    setUploading(true);
-    const formData = new FormData();
-    formData.append("file", selectedFile);
+    if (!selectedFile) {
+      setError("Please select a file first");
+      return;
+    }
+
     try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        body: formData,
-      });
-      if (response.ok) {
-        setSelectedFile(null);
-        setPreview(null);
-        fetchFiles();
+      setUploading(true);
+      setError("");
+
+      if (!getAuthToken()) {
+        setError("Authentication required. Please login first");
+        return;
       }
+
+      await filesAPI.upload(selectedFile);
+      setSelectedFile(null);
+      setPreview(null);
+      fetchFiles();
     } catch (error) {
       console.error("Error uploading file:", error);
+      setError(error.message || "Error uploading file. Please try again");
     } finally {
       setUploading(false);
     }
   };
 
-  const handleDelete = async (filename) => {
-    if (!window.confirm("Destroy this evidence?")) return;
+  const handleDelete = async (fileId) => {
+    if (!window.confirm("Are you sure you want to delete this file?")) {
+      return;
+    }
+
     try {
-      const response = await fetch(`${API_URL}/${filename}`, { method: "DELETE" });
-      if (response.ok) fetchFiles();
+      setLoading(true);
+      setError("");
+      await filesAPI.delete(fileId);
+      fetchFiles();
     } catch (error) {
       console.error("Error deleting file:", error);
+      setError(error.message || "Error deleting file");
+    } finally {
+      setLoading(false);
     }
   };
 
+  const getFileIcon = (mimetype) => {
+    if (mimetype.startsWith("image/")) return "🖼️";
+    if (mimetype === "application/pdf") return "📄";
+    if (mimetype === "text/plain") return "📝";
+    if (
+      mimetype === "application/msword" ||
+      mimetype.includes("wordprocessingml")
+    )
+      return "📘";
+    return "📎";
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+  };
+
   return (
-    <div className="space-y-12 animate-in fade-in zoom-in duration-500 max-w-6xl pb-20">
-      <div className="grid grid-cols-12 gap-8">
-        {/* Upload Zone */}
-        <div className="col-span-12 lg:col-span-4">
-          <div className="glass-card p-8 rounded-xl sticky top-8 text-center">
-            <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center justify-center gap-3">
-              <span className="material-symbols-outlined text-primary">upload_file</span>
-              Evidence Locker
-            </h3>
+    <div className="file-upload-container">
+      <h2>📁 File Upload</h2>
 
-            <div className="relative group mb-8">
-              <input
-                type="file"
-                id="file-input"
-                className="hidden"
-                onChange={handleFileChange}
-                disabled={uploading}
-              />
-              <label
-                htmlFor="file-input"
-                className="block p-10 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 hover:bg-white hover:border-primary transition-all cursor-pointer group-hover:shadow-inner"
-              >
-                {preview ? (
-                  <img src={preview} alt="Preview" className="w-full aspect-video rounded-xl object-cover shadow-lg mb-4" />
-                ) : (
-                  <span className="material-symbols-outlined text-5xl text-slate-300 mb-4 block group-hover:scale-110 transition-transform">add_a_photo</span>
-                )}
-                <span className="text-xs font-black uppercase tracking-widest text-slate-400 group-hover:text-primary">
-                  {selectedFile ? selectedFile.name : "Select Payload"}
-                </span>
-              </label>
-            </div>
+      {error && <div className="error-message">{error}</div>}
 
-            {selectedFile && (
-              <div className="mb-8 p-4 rounded-xl bg-white/40 border border-slate-100 text-left">
-                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Payload Size</p>
-                <p className="text-sm font-bold text-slate-700">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
-              </div>
+      {/* Upload Section */}
+      <div className="upload-section">
+        <div
+          className={`file-input-wrapper ${dragActive ? "drag-active" : ""}`}
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
+          onDrop={handleDrop}
+        >
+          <input
+            type="file"
+            id="file-input"
+            onChange={handleFileChange}
+            disabled={uploading || loading}
+            accept={ALLOWED_TYPES.join(",")}
+          />
+          <label htmlFor="file-input" className="file-label">
+            {dragActive ? (
+              <span>📥 Drop your file here</span>
+            ) : (
+              <span>📤 Click to browse or drag & drop</span>
             )}
+            <br />
+            <small>Images, PDF, Text, Word (max 50MB)</small>
+          </label>
+        </div>
 
-            <button
-              onClick={handleUpload}
-              disabled={uploading || !selectedFile}
-              className="w-full py-5 bg-primary text-white rounded-2xl font-black shadow-xl shadow-primary/30 hover:shadow-primary/40 transition-all disabled:opacity-50 disabled:grayscale"
-            >
-              {uploading ? "Deploying..." : "Upload Evidence →"}
-            </button>
+        {preview && (
+          <div className="preview-section">
+            <p>Preview:</p>
+            <img src={preview} alt="Preview" className="file-preview" />
           </div>
         </div>
 
-        {/* Files Grid */}
-        <div className="col-span-12 lg:col-span-8">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-xl font-black text-slate-900">Stored Payloads ({files.length})</h3>
+        {selectedFile && (
+          <div className="selected-file-info">
+            <p>
+              <strong>Selected:</strong> {selectedFile.name}
+            </p>
+            <p>
+              <strong>Size:</strong> {formatFileSize(selectedFile.size)}
+            </p>
           </div>
+        )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {files.length === 0 ? (
-              <div className="col-span-full glass-card p-20 rounded-xl text-center">
-                <span className="material-symbols-outlined text-6xl text-slate-200 mb-4">inventory_2</span>
-                <p className="font-bold text-slate-400">No secret files found in the grid.</p>
-              </div>
-            ) : (
-              files.map((file) => (
-                <div key={file.filename} className="glass-card group overflow-hidden rounded-xl animate-in slide-in-from-right duration-300">
-                  <div className="aspect-video relative bg-slate-100 overflow-hidden">
-                    {file.filename.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                      <img src={file.url} alt={file.filename} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-300">
-                        <span className="material-symbols-outlined text-6xl">description</span>
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6 gap-3">
-                      <a
-                        href={file.url}
-                        download
-                        className="flex-1 py-3 bg-white text-slate-900 rounded-xl font-black text-xs text-center shadow-lg hover:bg-primary hover:text-white transition-all"
-                      >
-                        Download
-                      </a>
-                      <button
-                        onClick={() => handleDelete(file.filename)}
-                        className="size-10 rounded-xl bg-danger text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-                      >
-                        <span className="material-symbols-outlined text-xl">delete</span>
-                      </button>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <h4 className="font-black text-slate-900 truncate mb-1" title={file.filename}>{file.filename}</h4>
-                    <p className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">
-                      {(file.size / 1024).toFixed(2)} KB • {new Date().toLocaleDateString()}
-                    </p>
-                  </div>
+        <button
+          onClick={handleUpload}
+          className={`btn-upload ${uploading ? "disabled" : ""}`}
+          disabled={uploading || loading}
+        >
+          {uploading ? "🔄 Uploading..." : "⬆️ Upload File"}
+        </button>
+      </div>
+
+      {/* Files List */}
+      <div className="files-section">
+        <h3>
+          Uploaded Files {loading && <span className="loading-spinner">⏳</span>}
+        </h3>
+        {loading && !files.length && <p className="loading">Loading files...</p>}
+        {files.length === 0 && !loading ? (
+          <p className="no-files">No files uploaded yet</p>
+        ) : (
+          <div className="files-grid">
+            {files.map((file) => (
+              <div key={file._id} className="file-item">
+                {file.mimetype.startsWith("image/") ? (
+                  <img
+                    src={file.url}
+                    alt={file.filename}
+                    className="file-thumbnail"
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                      e.target.nextElementSibling.style.display = "flex";
+                    }}
+                  />
+                ) : null}
+                <div
+                  className="file-icon"
+                  style={{
+                    display: file.mimetype.startsWith("image/") ? "none" : "flex",
+                  }}
+                >
+                  {getFileIcon(file.mimetype)}
+                </div>
+                <p className="file-name" title={file.filename}>
+                  {file.filename}
+                </p>
+                <p className="file-size">{formatFileSize(file.size)}</p>
+                <p className="file-date">
+                  {new Date(file.uploadedAt).toLocaleDateString()}
+                </p>
+                <div className="file-actions">
+                  <a
+                    href={file.url}
+                    download={file.filename}
+                    className="btn-download"
+                    title="Download"
+                  >
+                    ⬇️ Download
+                  </a>
+                  <button
+                    onClick={() => handleDelete(file._id)}
+                    className="btn-remove"
+                    disabled={loading}
+                    title="Delete"
+                  >
+                    🗑️ Remove
+                  </button>
                 </div>
               ))
             )}

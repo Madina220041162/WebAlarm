@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from "react";
+import { notesAPI, getAuthToken } from "../services/api";
+import "./Notes.css";
 
 const Notes = () => {
   const [notes, setNotes] = useState([]);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [tags, setTags] = useState("");
+  const [color, setColor] = useState("yellow");
+  const [isPinned, setIsPinned] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [filter, setFilter] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const API_URL = import.meta.env.VITE_API_URL + "/api/notes";
+  const COLORS = ["yellow", "blue", "green", "pink", "purple"];
 
   useEffect(() => {
     fetchNotes();
@@ -16,132 +21,261 @@ const Notes = () => {
 
   const fetchNotes = async () => {
     try {
-      const response = await fetch(API_URL);
-      if (response.ok) {
-        const data = await response.json();
-        setNotes(data);
+      setLoading(true);
+      setError("");
+
+      if (!getAuthToken()) {
+        setError("Please login to view notes");
+        return;
       }
+
+      const data = await notesAPI.getAll();
+      setNotes(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching notes:", error);
+      setError(error.message || "Error loading notes. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSaveNote = async () => {
-    if (!title.trim() || !content.trim()) return;
+    if (!title.trim() || !content.trim()) {
+      setError("Title and content are required");
+      return;
+    }
 
     try {
-      const tagArray = tags.split(",").map(t => t.trim()).filter(t => t);
-      const body = JSON.stringify({ title, content, tags: tagArray });
-      const method = editingId ? "PUT" : "POST";
-      const url = editingId ? `${API_URL}/${editingId}` : API_URL;
+      setLoading(true);
+      setError("");
 
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body,
-      });
-
-      if (response.ok) {
-        fetchNotes();
-        handleCancel();
+      if (!getAuthToken()) {
+        setError("Authentication required. Please login first.");
+        return;
       }
+
+      const payload = {
+        title: title.trim(),
+        content: content.trim(),
+        color,
+        isPinned,
+      };
+
+      if (editingId) {
+        await notesAPI.update(editingId, payload);
+        setEditingId(null);
+      } else {
+        await notesAPI.create(payload);
+      }
+
+      fetchNotes();
+      setTitle("");
+      setContent("");
+      setColor("yellow");
+      setIsPinned(false);
     } catch (error) {
       console.error("Error saving note:", error);
+      setError(error.message || "Error saving note. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDeleteNote = async (id) => {
-    if (!window.confirm("Delete this roast forever?")) return;
+    if (!window.confirm("Are you sure you want to delete this note?")) {
+      return;
+    }
+
     try {
-      const response = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-      if (response.ok) fetchNotes();
+      setLoading(true);
+      setError("");
+      await notesAPI.delete(id);
+      fetchNotes();
     } catch (error) {
       console.error("Error deleting note:", error);
+      setError(error.message || "Error deleting note. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePinToggle = async (id, currentPinnedState) => {
+    try {
+      const note = notes.find((n) => n._id === id);
+      if (!note) return;
+
+      await notesAPI.update(id, {
+        ...note,
+        isPinned: !currentPinnedState,
+      });
+
+      fetchNotes();
+    } catch (error) {
+      console.error("Error toggling pin:", error);
+      setError(error.message || "Error updating note");
     }
   };
 
   const handleEditNote = (note) => {
-    setEditingId(note.id);
+    setEditingId(note._id);
     setTitle(note.title);
     setContent(note.content);
-    setTags(note.tags.join(", "));
+    setColor(note.color || "yellow");
+    setIsPinned(note.isPinned || false);
   };
 
   const handleCancel = () => {
     setEditingId(null);
     setTitle("");
     setContent("");
-    setTags("");
+    setColor("yellow");
+    setIsPinned(false);
+    setError("");
   };
 
-  const filteredNotes = notes.filter(n =>
-    n.title.toLowerCase().includes(filter.toLowerCase()) ||
-    n.content.toLowerCase().includes(filter.toLowerCase()) ||
-    n.tags.some(t => t.toLowerCase().includes(filter.toLowerCase()))
+  const filteredNotes = notes.filter(
+    (note) =>
+      note.title.toLowerCase().includes(filter.toLowerCase()) ||
+      note.content.toLowerCase().includes(filter.toLowerCase())
   );
 
+  // Sort: pinned notes first, then by date
+  const sortedNotes = [...filteredNotes].sort((a, b) => {
+    if (a.isPinned !== b.isPinned) {
+      return a.isPinned ? -1 : 1;
+    }
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
   return (
-    <div className="space-y-8 animate-in fade-in zoom-in duration-500 max-w-6xl">
-      {/* Search & Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="relative flex-1 max-w-md">
-          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-          <input
-            type="text"
-            placeholder="Search the vault..."
-            className="w-full pl-12 pr-6 py-4 rounded-2xl glass-pill bg-white/20 border-white/40 focus:bg-white/60 focus:ring-4 focus:ring-primary/10 transition-all font-semibold outline-none text-slate-700"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          />
+    <div className="notes-container">
+      <h2>📝 Notes</h2>
+
+      {error && <div className="error-message">{error}</div>}
+
+      {/* Note Editor */}
+      <div className="notes-editor">
+        <input
+          type="text"
+          placeholder="Note Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="notes-input"
+          disabled={loading}
+        />
+        <textarea
+          placeholder="Write your note here..."
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          className="notes-textarea"
+          disabled={loading}
+        ></textarea>
+
+        <div className="notes-options">
+          <div className="color-picker">
+            <label>Color:</label>
+            <div className="color-buttons">
+              {COLORS.map((c) => (
+                <button
+                  key={c}
+                  className={`color-btn color-${c} ${
+                    color === c ? "selected" : ""
+                  }`}
+                  onClick={() => setColor(c)}
+                  disabled={loading}
+                  title={c}
+                />
+              ))}
+            </div>
+          </div>
+
+          <label className="pin-checkbox">
+            <input
+              type="checkbox"
+              checked={isPinned}
+              onChange={(e) => setIsPinned(e.target.checked)}
+              disabled={loading}
+            />
+            📌 Pin this note
+          </label>
+        </div>
+
+        <div className="notes-actions">
+          <button
+            onClick={handleSaveNote}
+            className="btn-save"
+            disabled={loading}
+          >
+            {editingId ? "Update Note" : "Save Note"}
+          </button>
+          {editingId && (
+            <button
+              onClick={handleCancel}
+              className="btn-cancel"
+              disabled={loading}
+            >
+              Cancel
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-8">
-        {/* Editor Area */}
-        <div className="col-span-12 lg:col-span-5">
-          <div className="glass-card p-8 rounded-xl sticky top-8">
-            <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-3">
-              <span className="material-symbols-outlined text-primary">edit_note</span>
-              {editingId ? "Refine the Roast" : "Record a Failure"}
-            </h3>
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Roast Title"
-                className="w-full px-6 py-4 rounded-2xl bg-white/40 border border-slate-100 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold outline-none text-slate-800"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-              <textarea
-                placeholder="Describe the disappointment..."
-                rows="6"
-                className="w-full px-6 py-4 rounded-2xl bg-white/40 border border-slate-100 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-medium outline-none text-slate-700 resize-none"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-              ></textarea>
-              <input
-                type="text"
-                placeholder="Tags (burn, failure, late...)"
-                className="w-full px-6 py-4 rounded-2xl bg-white/40 border border-slate-100 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold outline-none text-slate-800"
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
-              />
-              <div className="flex gap-4 pt-4">
-                <button
-                  onClick={handleSaveNote}
-                  className="flex-1 py-4 bg-primary text-white rounded-2xl font-black shadow-lg shadow-primary/30 hover:shadow-primary/40 transition-all"
-                >
-                  {editingId ? "Update Roast" : "Seal in Vault"}
-                </button>
-                {editingId && (
+      {/* Search / Filter */}
+      <input
+        type="text"
+        placeholder="Search notes..."
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
+        className="notes-search"
+        disabled={loading}
+      />
+
+      {/* Notes List */}
+      {loading && <p className="loading">Loading notes...</p>}
+
+      <div className="notes-list">
+        {sortedNotes.length === 0 ? (
+          <p className="no-notes">
+            {filter ? "No notes match your search" : "No notes yet. Create one!"}
+          </p>
+        ) : (
+          sortedNotes.map((note) => (
+            <div
+              key={note._id}
+              className={`note-card color-${note.color || "yellow"}`}
+            >
+              <div className="note-header">
+                <div className="note-title-section">
+                  {note.isPinned && <span className="pin-icon">📌</span>}
+                  <h3>{note.title}</h3>
+                </div>
+                <div className="note-actions-icons">
                   <button
-                    onClick={handleCancel}
-                    className="px-6 py-4 glass-pill rounded-2xl font-bold text-slate-500"
+                    onClick={() => handlePinToggle(note._id, note.isPinned)}
+                    className="btn-pin"
+                    title={note.isPinned ? "Unpin" : "Pin"}
                   >
-                    Cancel
+                    {note.isPinned ? "📌" : "📍"}
                   </button>
-                )}
+                  <button
+                    onClick={() => handleEditNote(note)}
+                    className="btn-edit"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteNote(note._id)}
+                    className="btn-delete"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
+              <p className="note-content">{note.content}</p>
+              <p className="note-date">
+                {new Date(note.updatedAt).toLocaleDateString()} at{" "}
+                {new Date(note.updatedAt).toLocaleTimeString()}
+              </p>
             </div>
           </div>
         </div>

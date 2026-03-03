@@ -80,10 +80,10 @@ npm install
 
 3. Create a `.env` file in the project root with:
 ```
-MONGODB_URI=mongodb://localhost:27017/mern-lab
+MONGODB_URI=mongodb+srv://limassoubello_db_user:***********@cluster0.yculwjb.mongodb.net/mern-lab?retryWrites=true&w=majority
 PORT=5000
 NODE_ENV=development
-JWT_SECRET=your-secret-key
+JWT_SECRET=******
 CLIENT_URL=http://localhost:5173
 ```
 

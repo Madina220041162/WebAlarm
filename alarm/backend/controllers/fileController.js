@@ -16,85 +16,100 @@ exports.uploadFile = async (req, res) => {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
     const fileUrl = `/uploads/${req.file.filename}`;
 
     // Save metadata to MongoDB
-    try {
-      const doc = new FileMeta({
-        filename: req.file.filename,
-        url: fileUrl,
-        size: req.file.size,
-        mimetype: req.file.mimetype,
-        userId: req.userId || undefined,
-      });
-      await doc.save();
-    } catch (err) {
-      console.warn('Failed to save file metadata to DB:', err.message);
-    }
-
-    res.status(201).json({
-      message: 'File uploaded successfully',
+    const fileMeta = new FileMeta({
       filename: req.file.filename,
       url: fileUrl,
       size: req.file.size,
+      mimetype: req.file.mimetype,
+      userId: userId,
+    });
+
+    await fileMeta.save();
+
+    res.status(201).json({
+      message: 'File uploaded successfully',
+      file: {
+        id: fileMeta._id,
+        filename: fileMeta.filename,
+        url: fileUrl,
+        size: fileMeta.size,
+        mimetype: fileMeta.mimetype,
+        uploadedAt: fileMeta.uploadedAt,
+      },
     });
   } catch (error) {
     res.status(500).json({ message: 'Error uploading file', error: error.message });
   }
 };
 
-// Get list of uploaded files
+// Get user's uploaded files
 exports.getUploadedFiles = async (req, res) => {
   try {
-    // Try DB first
-    try {
-      const docs = await FileMeta.find().sort({ uploadedAt: -1 }).lean();
-      if (docs && docs.length > 0) return res.status(200).json(docs);
-    } catch (err) {
-      console.warn('Failed to read file metadata from DB:', err.message);
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication required' });
     }
 
-    // Fallback to filesystem
-    const files = fs.readdirSync(uploadsDir).map((filename) => {
-      const filePath = path.join(uploadsDir, filename);
-      const stat = fs.statSync(filePath);
-      return {
-        filename,
-        url: `/uploads/${filename}`,
-        size: stat.size,
-        uploadedAt: stat.mtime.toISOString(),
-      };
-    });
-
+    const files = await FileMeta.find({ userId }).sort({ uploadedAt: -1 }).lean();
     res.status(200).json(files);
   } catch (error) {
     res.status(500).json({ message: 'Error retrieving files', error: error.message });
   }
 };
 
-// Delete uploaded file
-exports.deleteFile = async (req, res) => {
+// Get single file metadata
+exports.getFile = async (req, res) => {
   try {
-    const { filename } = req.params;
-    const filePath = path.join(uploadsDir, filename);
+    const userId = req.userId;
+    const { fileId } = req.params;
 
-    // Prevent directory traversal
-    if (!filePath.startsWith(uploadsDir)) {
-      return res.status(403).json({ message: 'Invalid file path' });
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication required' });
     }
 
-    if (!fs.existsSync(filePath)) {
+    const file = await FileMeta.findOne({ _id: fileId, userId }).lean();
+    if (!file) {
       return res.status(404).json({ message: 'File not found' });
     }
 
-    fs.unlinkSync(filePath);
+    res.status(200).json(file);
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving file', error: error.message });
+  }
+};
 
-    // Remove metadata from DB if present
-    try {
-      await FileMeta.deleteOne({ filename });
-    } catch (err) {
-      console.warn('Failed to remove file metadata from DB:', err.message);
+// Delete uploaded file
+exports.deleteFile = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { fileId } = req.params;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication required' });
     }
+
+    // Find and verify file ownership
+    const fileMeta = await FileMeta.findOne({ _id: fileId, userId });
+    if (!fileMeta) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    // Delete physical file from filesystem
+    const filePath = path.join(uploadsDir, fileMeta.filename);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    // Delete metadata from database
+    await FileMeta.deleteOne({ _id: fileId });
 
     res.status(200).json({ message: 'File deleted successfully' });
   } catch (error) {

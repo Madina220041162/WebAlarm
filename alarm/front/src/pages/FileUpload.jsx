@@ -220,7 +220,7 @@ const FileUpload = () => {
             <p>Preview:</p>
             <img src={preview} alt="Preview" className="file-preview" />
           </div>
-        )}
+        </div>
 
         {selectedFile && (
           <div className="selected-file-info">
@@ -298,10 +298,10 @@ const FileUpload = () => {
                     🗑️ Remove
                   </button>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

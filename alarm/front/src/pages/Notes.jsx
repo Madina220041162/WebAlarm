@@ -15,7 +15,6 @@ const Notes = () => {
 
   const COLORS = ["yellow", "blue", "green", "pink", "purple"];
 
-  // Fetch notes on component mount
   useEffect(() => {
     fetchNotes();
   }, []);
@@ -278,8 +277,47 @@ const Notes = () => {
                 {new Date(note.updatedAt).toLocaleTimeString()}
               </p>
             </div>
-          ))
-        )}
+          </div>
+        </div>
+
+        {/* Notes Grid */}
+        <div className="col-span-12 lg:col-span-7 space-y-6">
+          {filteredNotes.length === 0 ? (
+            <div className="glass-card p-12 rounded-xl text-center">
+              <span className="material-symbols-outlined text-6xl text-slate-200 mb-4">folder_off</span>
+              <p className="font-bold text-slate-400">Vault is empty. No roasts found.</p>
+            </div>
+          ) : (
+            filteredNotes.map((note) => (
+              <div key={note.id} className="glass-card p-8 rounded-xl group hover:translate-y-[-4px] transition-all duration-300">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h4 className="text-xl font-black text-slate-900 group-hover:text-primary transition-colors">{note.title}</h4>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                      {new Date(note.updatedAt).toLocaleDateString(undefined, { dateStyle: 'long' })}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => handleEditNote(note)} className="size-10 rounded-xl glass-pill flex items-center justify-center text-slate-400 hover:text-primary">
+                      <span className="material-symbols-outlined text-xl">edit</span>
+                    </button>
+                    <button onClick={() => handleDeleteNote(note.id)} className="size-10 rounded-xl glass-pill flex items-center justify-center text-slate-400 hover:text-danger">
+                      <span className="material-symbols-outlined text-xl">delete</span>
+                    </button>
+                  </div>
+                </div>
+                <p className="text-slate-600 font-medium leading-relaxed mb-6">{note.content}</p>
+                <div className="flex flex-wrap gap-2">
+                  {note.tags.map(tag => (
+                    <span key={tag} className="px-3 py-1 rounded-lg bg-slate-100 text-[10px] font-black uppercase text-slate-500 tracking-tighter">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,81 +1,43 @@
-@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Fredoka:wght@400;600;700&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
-:root {
-  --sky: #c9f4ff;
-  --cream: #fff4dc;
-  --cream-2: #f3e7c9;
-  --wood: #c79a6a;
-  --wood-deep: #a47446;
-  --ink: #513028;
-  --muted: #7b5a4f;
-  --accent: #ffb84d;
-  --accent-2: #ff9f80;
-  --mint: #a5e6ce;
-  --border: #7c4740;
-  --surface: #fffaf0;
-  --shadow: 0 10px 26px rgba(81, 48, 40, 0.18);
-  --ring: 0 0 0 4px rgba(255, 184, 77, 0.28);
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  font-family: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color: var(--ink);
-  background-color: var(--sky);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  body {
+    @apply text-slate-800 min-h-screen;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: linear-gradient(135deg, #e0f2fe 0%, #fae8ff 50%, #fef9c3 100%);
+    background-attachment: fixed;
+  }
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+@layer components {
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-xl border border-white/40 shadow-xl shadow-blue-500/5;
+  }
+
+  .glass-pill {
+    @apply bg-white/40 backdrop-blur-md border border-white/20 hover:bg-white/60 transition-all duration-300;
+  }
+
+  .active-pill {
+    @apply bg-primary text-white shadow-lg shadow-primary/25 border-transparent;
+  }
+
+  .clock-shadow {
+    text-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  }
 }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background:
-    radial-gradient(1200px 700px at 15% -10%, #e9fbff 0%, transparent 60%),
-    radial-gradient(1000px 650px at 110% 5%, #e3fff1 0%, transparent 55%),
-    linear-gradient(180deg, var(--sky) 0%, #c8f7ff 60%, #bfefff 100%);
-  color: var(--ink);
+::-webkit-scrollbar {
+  width: 6px;
 }
 
-a {
-  font-weight: 700;
-  color: inherit;
-  text-decoration: none;
-}
-
-a:hover {
-  color: var(--wood-deep);
-}
-
-button {
-  border-radius: 16px;
-  border: 2px solid var(--border);
-  padding: 0.65em 1.3em;
-  font-size: 0.95rem;
-  font-weight: 700;
-  font-family: "Fredoka", "Nunito", system-ui, sans-serif;
-  background-color: var(--accent);
-  color: var(--ink);
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-}
-
-button:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow);
-  background-color: #ffc86d;
-}
-
-button:focus-visible {
-  outline: none;
-  box-shadow: var(--ring);
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 /* Dark Mode */

@@ -3,7 +3,6 @@ import { gameScoresAPI, getAuthToken } from "../services/api";
 import TypingTest from "./TypingTest";
 import MathDots from "./MathDots";
 import FlipGrid from "./FlipGrid";
-import "./GamesHub.css";
 
 const GamesHub = () => {
   const [selectedGame, setSelectedGame] = useState(null);
@@ -36,7 +35,6 @@ const GamesHub = () => {
       setError("");
       const types = ["TypingTest", "MathDots", "FlipGrid"];
       const allScores = {};
-
       for (const type of types) {
         try {
           const data = await gameScoresAPI.getLeaderboard(type, 5);
@@ -132,9 +130,8 @@ const GamesHub = () => {
     );
   }
 
-  if (selectedGame === "math") {
     return (
-      <div>
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <button
           onClick={() => !activeAlarm && setSelectedGame(null)}
           className="btn-back-to-hub"
@@ -142,7 +139,8 @@ const GamesHub = () => {
           style={activeAlarm && !alarmDismissed ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
           title={activeAlarm && !alarmDismissed ? 'Win the game to go back' : ''}
         >
-          ← Back to Games Hub
+          <span className="material-symbols-outlined">arrow_back</span>
+          Back to Hub
         </button>
         {activeAlarm && !alarmDismissed && (
           <div className="alarm-requirement">
@@ -208,6 +206,9 @@ const GamesHub = () => {
               <span>Play to set a score</span>
             )}
           </div>
+          <button onClick={() => setSelectedGame("typing")} className="w-full py-4 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/30 hover:shadow-primary/40 transition-all">
+            Initialize Battle
+          </button>
         </div>
 
         <div
@@ -225,6 +226,15 @@ const GamesHub = () => {
               <span>Play to set a score</span>
             )}
           </div>
+          <h3 className="text-xl font-extrabold mb-3 text-slate-800">Math Dots</h3>
+          <p className="text-sm text-slate-500 leading-relaxed mb-8">Solve rapid-fire equations to silence the digital beast.</p>
+          <div className="mb-6">
+            <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest block mb-1">Personal Best</span>
+            <span className="text-2xl font-black text-accent">{scores.mathDots[0]?.score || 0}</span>
+          </div>
+          <button onClick={() => setSelectedGame("math")} className="w-full py-4 bg-accent text-white rounded-2xl font-bold shadow-lg shadow-accent/30 hover:shadow-accent/40 transition-all">
+            Start Logic Test
+          </button>
         </div>
 
         <div
@@ -242,6 +252,9 @@ const GamesHub = () => {
               <span>Play to set a score</span>
             )}
           </div>
+          <button onClick={() => setSelectedGame("flip")} className="w-full py-4 bg-secondary text-white rounded-2xl font-bold shadow-lg shadow-secondary/30 hover:shadow-secondary/40 transition-all">
+            Enter Pattern Zone
+          </button>
         </div>
       </div>
 

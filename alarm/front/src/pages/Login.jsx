@@ -1,11 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
-import "../styles/login.css";
-
-// background images
-import bgLight from "../assets/login/bg-light.png";
-import bgNight from "../assets/login/bg-night.png";
 
 export default function Login() {
   const { login, error } = useAuth();
@@ -13,7 +8,6 @@ export default function Login() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [darkMode, setDarkMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState("");
 
@@ -21,7 +15,6 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setLocalError("");
-
     try {
       await login(username, password);
       navigate("/");
@@ -33,75 +26,82 @@ export default function Login() {
   };
 
   return (
-    <div
-      className={`login-page ${darkMode ? "dark" : "light"}`}
-      style={{
-        backgroundImage: `url(${darkMode ? bgNight : bgLight})`,
-      }}
-    >
-      <div className="login-card">
-        <h1 className="title">MurgiKlok</h1>
-        <h2>Sign In</h2>
+    <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="glass-card w-full max-w-md p-10 rounded-xl relative overflow-hidden animate-in fade-in zoom-in duration-500">
+        <div className="absolute top-0 right-0 p-8">
+          <div className="size-20 rounded-full bg-primary/5 blur-3xl"></div>
+        </div>
+
+        <div className="text-center mb-10">
+          <div className="size-20 rounded-3xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white mx-auto mb-6 shadow-xl shadow-primary/20">
+            <span className="material-symbols-outlined text-5xl">notifications_active</span>
+          </div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Murgi<span className="text-primary">Klok</span></h1>
+          <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.3em] mt-2">Premium Battle Auth</p>
+        </div>
 
         {(localError || error) && (
-          <div className="error-message">{localError || error}</div>
+          <div className="mb-6 p-4 rounded-2xl bg-danger/10 border border-danger/20 text-danger text-sm font-bold flex items-center gap-3">
+            <span className="material-symbols-outlined">error</span>
+            {localError || error}
+          </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Identity Code</label>
+            <div className="relative group">
+              <span className="material-symbols-outlined absolute left-4 top-4 text-slate-400 group-focus-within:text-primary transition-colors">alternate_email</span>
+              <input
+                type="text"
+                placeholder="admin@gmail.com"
+                className="w-full pl-12 pr-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-semibold outline-none"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Battle Password</label>
+            <div className="relative group">
+              <span className="material-symbols-outlined absolute left-4 top-4 text-slate-400 group-focus-within:text-primary transition-colors">lock</span>
+              <input
+                type="password"
+                placeholder="••••••••"
+                className="w-full pl-12 pr-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-semibold outline-none"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between px-1 text-xs font-bold text-slate-500">
+            <label className="flex items-center gap-2 cursor-pointer hover:text-slate-700">
+              <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary" />
+              Remember Terminal
+            </label>
+            <Link to="/forgot-password" title="Feature coming soon" className="hover:text-primary">Lost Code?</Link>
+          </div>
+
+          <button
+            type="submit"
             disabled={loading}
-          />
-
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            disabled={loading}
-          />
-
-          <label className="remember">
-            <input type="checkbox" disabled={loading} /> Remember me
-          </label>
-
-          <button type="submit" className="btn primary" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+            className="w-full py-5 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-2xl font-black shadow-xl shadow-primary/30 hover:shadow-primary/40 hover:translate-y-[-2px] transition-all disabled:opacity-50"
+          >
+            {loading ? "Decrypting..." : "Initialize Session →"}
           </button>
         </form>
 
-        <div className="links">
-          <Link to="/forgot-password">Forgot password?</Link>
-          <Link to="/register">Create account</Link>
+        <div className="mt-10 pt-10 border-t border-slate-100 text-center">
+          <p className="text-sm font-bold text-slate-400">
+            New Recruit? <Link to="/register" className="text-primary hover:underline">Apply for Entry</Link>
+          </p>
         </div>
-
-        <hr />
-
-        <button
-          className="btn google"
-          onClick={() => alert("Google login coming soon")}
-          disabled={loading}
-        >
-          Login with Google
-        </button>
-
-        <button
-          type="button"
-          className="mode-toggle"
-          onClick={() => setDarkMode(!darkMode)}
-          disabled={loading}
-          aria-label={`Switch to ${darkMode ? "light" : "dark"} mode`}
-          title={`Switch to ${darkMode ? "light" : "dark"} mode`}
-        >
-          <span className="mode-icon" aria-hidden="true">
-            {darkMode ? "☀️" : "🌙"}
-          </span>
-        </button>
       </div>
     </div>
   );

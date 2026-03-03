@@ -1,4 +1,4 @@
-import { Routes, Route, Link, useNavigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
 import { useTheme } from "./theme/ThemeContext";
 import Login from "./pages/Login";
@@ -11,6 +11,7 @@ import Alarm from "./pages/Alarm";
 import Notes from "./pages/Notes";
 import FileUpload from "./pages/FileUpload";
 import GamesHub from "./games/GamesHub";
+import Sidebar from "./components/Sidebar";
 import "./App.css";
 
 function Navigation() {
@@ -76,7 +77,7 @@ export default function App() {
             <>
               <Navigation />
               <CalendarPage />
-            </>
+            </DashboardLayout>
           </ProtectedRoute>
         }
       />
@@ -84,10 +85,9 @@ export default function App() {
         path="/alarm"
         element={
           <ProtectedRoute>
-            <>
-              <Navigation />
+            <DashboardLayout title="Morning" subtitle="Torture Battle">
               <Alarm />
-            </>
+            </DashboardLayout>
           </ProtectedRoute>
         }
       />
@@ -95,10 +95,9 @@ export default function App() {
         path="/notes"
         element={
           <ProtectedRoute>
-            <>
-              <Navigation />
+            <DashboardLayout title="Roast" subtitle="Vault">
               <Notes />
-            </>
+            </DashboardLayout>
           </ProtectedRoute>
         }
       />
@@ -106,10 +105,9 @@ export default function App() {
         path="/files"
         element={
           <ProtectedRoute>
-            <>
-              <Navigation />
+            <DashboardLayout title="Secret" subtitle="Files">
               <FileUpload />
-            </>
+            </DashboardLayout>
           </ProtectedRoute>
         }
       />
@@ -117,10 +115,9 @@ export default function App() {
         path="/games"
         element={
           <ProtectedRoute>
-            <>
-              <Navigation />
+            <DashboardLayout title="Hall of" subtitle="Shame">
               <GamesHub />
-            </>
+            </DashboardLayout>
           </ProtectedRoute>
         }
       />

@@ -15,7 +15,6 @@ export default function Alarm() {
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState(null);
   const socketRef = useRef(null);
-  const audioRef = useRef(null);
 
   const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const SOUNDS = [
@@ -37,7 +36,10 @@ export default function Alarm() {
       console.log('Connected to server via Socket.IO');
     });
 
+  useEffect(() => {
+    socketRef.current = io(API_URL);
     socketRef.current.on('alarmTriggered', (data) => {
+      // Standard feature: alert on trigger
       console.log('Alarm triggered:', data);
       playAlarmSound(data.soundId);
       
@@ -52,19 +54,8 @@ export default function Alarm() {
       setError(`🔔 ALARM! Win a game to stop it: ${data.label}`);
       fetchAlarms();
     });
-
-    socketRef.current.on('disconnect', () => {
-      console.log('Disconnected from server');
-    });
-
-    return () => {
-      if (socketRef.current) socketRef.current.disconnect();
-    };
-  }, []);
-
-  // Fetch alarms on mount
-  useEffect(() => {
     fetchAlarms();
+    return () => socketRef.current?.disconnect();
   }, []);
 
   const fetchAlarms = async () => {

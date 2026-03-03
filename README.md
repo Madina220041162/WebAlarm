@@ -80,11 +80,11 @@ npm install
 
 3. Create a `.env` file in the project root with:
 ```
-MONGODB_URI=mongodb://localhost:27017/mern-lab
+MONGODB_URI=mongodb+srv://limassoubello_db_user:N2JGZjKYZ1CgnkSl@cluster0.yculwjb.mongodb.net/mern-lab?retryWrites=true&w=majority
 PORT=5000
 NODE_ENV=development
-JWT_SECRET=your-secret-key
-CLIENT_URL=http://localhost:5173
+JWT_SECRET=123456
+CLIENT_URL=https://webalarm-ochre.vercel.app
 ```
 
 4. Start the server:

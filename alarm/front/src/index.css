@@ -7,24 +7,43 @@
 
 @layer base {
   body {
-    @apply text-slate-800 min-h-screen;
+    @apply text-slate-900 min-h-screen transition-colors duration-300;
     font-family: 'Plus Jakarta Sans', sans-serif;
-    background: linear-gradient(135deg, #e0f2fe 0%, #fae8ff 50%, #fef9c3 100%);
+    /* Soft, premium light mode background */
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
     background-attachment: fixed;
+  }
+
+  .dark body {
+    @apply text-slate-100;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #1e293b 100%);
   }
 }
 
 @layer components {
   .glass-card {
-    @apply bg-white/70 backdrop-blur-xl border border-white/40 shadow-xl shadow-blue-500/5;
+    /* Higher opacity and sharper border for light mode readability */
+    @apply bg-white/90 backdrop-blur-xl border border-slate-200/60 shadow-2xl shadow-slate-200/50 transition-all duration-300;
+  }
+
+  .dark .glass-card {
+    @apply bg-slate-900/60 border-white/10 shadow-slate-950/20;
   }
 
   .glass-pill {
-    @apply bg-white/40 backdrop-blur-md border border-white/20 hover:bg-white/60 transition-all duration-300;
+    @apply bg-slate-100/50 backdrop-blur-md border border-slate-200/40 hover:bg-white/80 transition-all duration-300;
+  }
+
+  .dark .glass-pill {
+    @apply bg-slate-800/40 border-white/5 hover:bg-slate-800/60 text-slate-300;
   }
 
   .active-pill {
     @apply bg-primary text-white shadow-lg shadow-primary/25 border-transparent;
+  }
+
+  .dark .active-pill {
+    @apply bg-primary/80 border-primary/20;
   }
 
   .clock-shadow {

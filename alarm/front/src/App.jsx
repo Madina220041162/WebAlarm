@@ -9,36 +9,38 @@ import Alarm from "./pages/Alarm";
 import Notes from "./pages/Notes";
 import FileUpload from "./pages/FileUpload";
 import GamesHub from "./games/GamesHub";
+import Settings from "./pages/Settings";
+import IdentityCheck from "./pages/IdentityCheck";
 import Sidebar from "./components/Sidebar";
 import "./App.css";
 
 function DashboardLayout({ children, title, subtitle }) {
+  const { user, explosionMode } = useAuth();
+
   return (
-    <div className="flex h-screen overflow-hidden p-6 gap-6">
+    <div className="flex h-screen overflow-hidden p-6 gap-6 transition-colors duration-300">
       <Sidebar />
       <main className="flex-1 overflow-y-auto pr-2 scrollbar-hide">
         <header className="flex justify-between items-center mb-8 px-4">
           <div>
-            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
+            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white transition-colors duration-300">
               {title || "Morning"} <span className="text-primary">{subtitle || "Dashboard"}</span>
             </h1>
-            <p className="text-slate-500 mt-1 font-medium italic">
-              Defuse immediately to avoid scheduled public embarrassment.
+            <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium italic">
+              {explosionMode ? "EMERGENCY PROTOCOL ACTIVE: Defuse immediately." : "Defuse immediately to avoid scheduled public embarrassment."}
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 group">
             <div className="text-right">
-              <p className="text-sm font-bold text-slate-700">Sleepy Civilian</p>
-              <p className="text-xs text-danger uppercase font-black tracking-tighter">
-                Resistance is Futile
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{user?.username || "Sleepy Civilian"}</p>
+              <p className={`text-[9px] uppercase font-black tracking-tighter ${explosionMode ? 'text-danger animate-pulse' : 'text-primary'}`}>
+                {explosionMode ? 'Resistance is Futile' : 'At Ease Soldier'}
               </p>
             </div>
-            <div className="size-12 rounded-2xl p-0.5 bg-gradient-to-tr from-primary to-secondary">
-              <img
-                alt="Profile"
-                className="w-full h-full rounded-[0.9rem] object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQzDBvYJeWvZovrleKRpCnQ0eEId1nhNSik1yeaH9Rql8r_uOX6iiz-uWe_9Mq7ZG5rBZwopAZh1emuWEFqFbtlZFofwGHAV0_mo69SOX80wdGRgshOPEeV7hPmRh3XKqvwpQJttavY6wlkyuOdXqs3vZjY4vDZ7ubjdMKJuhDtXj5lyiRcpC3IST8EoO0HodtEc3d5fa_5bvU7ltYzf58WjA3YZO7D-c7cPWQeXgu1nJJmkm4iuGt6YRpbvAXbZlmZEQYaRkmR8zY"
-              />
+            <div className="size-12 rounded-2xl p-0.5 bg-gradient-to-tr from-primary to-secondary shadow-lg shadow-primary/20 group-hover:scale-110 transition-all duration-300">
+              <div className="w-full h-full rounded-[0.9rem] bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
+                <span className="material-symbols-outlined text-slate-400">person</span>
+              </div>
             </div>
           </div>
         </header>
@@ -61,18 +63,18 @@ export default function App() {
         path="/"
         element={
           <ProtectedRoute>
-            <DashboardLayout title="Events" subtitle="Calendar">
-              <CalendarPage />
+            <DashboardLayout title="Active" subtitle="Alarms">
+              <Alarm />
             </DashboardLayout>
           </ProtectedRoute>
         }
       />
       <Route
-        path="/alarm"
+        path="/calendar"
         element={
           <ProtectedRoute>
-            <DashboardLayout title="Morning" subtitle="Torture Battle">
-              <Alarm />
+            <DashboardLayout title="Mission" subtitle="Schedule">
+              <CalendarPage />
             </DashboardLayout>
           </ProtectedRoute>
         }
@@ -81,7 +83,7 @@ export default function App() {
         path="/notes"
         element={
           <ProtectedRoute>
-            <DashboardLayout title="Roast" subtitle="Vault">
+            <DashboardLayout title="Penalty" subtitle="Notes">
               <Notes />
             </DashboardLayout>
           </ProtectedRoute>
@@ -91,7 +93,7 @@ export default function App() {
         path="/files"
         element={
           <ProtectedRoute>
-            <DashboardLayout title="Secret" subtitle="Files">
+            <DashboardLayout title="Vault" subtitle="Storage">
               <FileUpload />
             </DashboardLayout>
           </ProtectedRoute>
@@ -101,8 +103,28 @@ export default function App() {
         path="/games"
         element={
           <ProtectedRoute>
-            <DashboardLayout title="Hall of" subtitle="Shame">
+            <DashboardLayout title="Wake-up" subtitle="Rankings">
               <GamesHub />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout title="App" subtitle="Settings">
+              <Settings />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/identity-check"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout title="Identity" subtitle="Check">
+              <IdentityCheck />
             </DashboardLayout>
           </ProtectedRoute>
         }
@@ -110,6 +132,6 @@ export default function App() {
 
       {/* Fallback */}
       <Route path="*" element={<Login />} />
-    </Routes>
+    </Routes >
   );
 }

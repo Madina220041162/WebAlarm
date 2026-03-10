@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 
 export default function Login() {
-  const { login, error } = useAuth();
+  const { login, loginWithGoogle, enterGuestMode, error } = useAuth();
   const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
@@ -23,6 +23,24 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setLocalError("");
+    try {
+      await loginWithGoogle();
+      navigate("/");
+    } catch (err) {
+      setLocalError(err.message || "Google login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGuestExplore = () => {
+    enterGuestMode();
+    navigate("/calendar");
   };
 
   return (
@@ -96,6 +114,28 @@ export default function Login() {
             {loading ? "Decrypting..." : "Initialize Session →"}
           </button>
         </form>
+
+        <div className="my-6 text-center text-xs font-bold uppercase tracking-widest text-slate-400">OR</div>
+
+        <button
+          type="button"
+          onClick={handleGoogleSignIn}
+          disabled={true}
+          title="Google OAuth credentials not yet configured. Use username/password to login."
+          className="w-full py-4 mb-4 border border-slate-200 bg-slate-50 rounded-2xl font-bold text-slate-500 cursor-not-allowed flex items-center justify-center gap-3 opacity-50"
+        >
+          <span className="text-base">G</span>
+          Sign in with Google (Coming Soon)
+        </button>
+
+        <button
+          type="button"
+          onClick={handleGuestExplore}
+          disabled={loading}
+          className="w-full py-3 rounded-2xl font-bold text-primary hover:bg-primary/5 transition-all disabled:opacity-50"
+        >
+          Continue as Guest
+        </button>
 
         <div className="mt-10 pt-10 border-t border-slate-100 text-center">
           <p className="text-sm font-bold text-slate-400">

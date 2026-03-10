@@ -2,13 +2,13 @@ const Alarm = require('../models/Alarm');
 
 exports.createAlarm = async (req, res) => {
   try {
-    const { time, label, userId, sound, sleeperType } = req.body;
+    const { time, label, sound, sleeperType } = req.body;
     if (!time) return res.status(400).json({ message: 'time is required' });
 
     const alarm = new Alarm({ 
       time: new Date(time), 
       label: label || 'Alarm', 
-      userId,
+      userId: req.userId,
       sound: sound || 'rooster',
       sleeperType: sleeperType || 'dream-drifter'
     });
@@ -34,6 +34,9 @@ exports.updateAlarm = async (req, res) => {
     const { time, label, enabled, sound, sleeperType } = req.body;
     const alarm = await Alarm.findById(id);
     if (!alarm) return res.status(404).json({ message: 'Alarm not found' });
+    if (alarm.userId && String(alarm.userId) !== String(req.userId)) {
+      return res.status(403).json({ message: 'Not allowed to edit this alarm' });
+    }
 
     if (time) alarm.time = new Date(time);
     if (label !== undefined) alarm.label = label;
@@ -53,6 +56,12 @@ exports.updateAlarm = async (req, res) => {
 exports.deleteAlarm = async (req, res) => {
   try {
     const { id } = req.params;
+    const alarm = await Alarm.findById(id);
+    if (!alarm) return res.status(404).json({ message: 'Alarm not found' });
+    if (alarm.userId && String(alarm.userId) !== String(req.userId)) {
+      return res.status(403).json({ message: 'Not allowed to delete this alarm' });
+    }
+
     await Alarm.findByIdAndDelete(id);
     res.status(200).json({ message: 'Alarm deleted' });
   } catch (error) {
@@ -65,6 +74,10 @@ exports.toggleAlarm = async (req, res) => {
     const { id } = req.params;
     const alarm = await Alarm.findById(id);
     if (!alarm) return res.status(404).json({ message: 'Alarm not found' });
+    if (alarm.userId && String(alarm.userId) !== String(req.userId)) {
+      return res.status(403).json({ message: 'Not allowed to toggle this alarm' });
+    }
+
     alarm.enabled = !alarm.enabled;
     await alarm.save();
     res.status(200).json({ message: 'Alarm toggled', alarm });

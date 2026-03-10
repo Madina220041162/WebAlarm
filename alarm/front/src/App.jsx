@@ -3,6 +3,7 @@ import { useAuth } from "./auth/AuthContext";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
+import GoogleCallback from "./pages/GoogleCallback";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import CalendarPage from "./calendar/CalendarPage";
@@ -57,19 +58,14 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/explore" element={
-        <DashboardLayout title="Explore" subtitle="KokoAlarm">
-          <div className="text-center text-slate-500 py-12">
-            <p>Login to access all features</p>
-          </div>
-        </DashboardLayout>
-      } />
+      <Route path="/auth/google-callback" element={<GoogleCallback />} />
+      <Route path="/explore" element={<Dashboard />} />
 
       {/* Protected application routes */}
       <Route
         path="/calendar"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowGuest>
             <DashboardLayout title="Events" subtitle="Calendar">
               <CalendarPage />
             </DashboardLayout>
@@ -79,7 +75,7 @@ export default function App() {
       <Route
         path="/alarm"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowGuest>
             <DashboardLayout title="Morning" subtitle="Torture Battle">
               <Alarm />
             </DashboardLayout>
@@ -89,7 +85,7 @@ export default function App() {
       <Route
         path="/notes"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowGuest>
             <DashboardLayout title="Roast" subtitle="Vault">
               <Notes />
             </DashboardLayout>
@@ -99,7 +95,7 @@ export default function App() {
       <Route
         path="/files"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowGuest>
             <DashboardLayout title="Secret" subtitle="Files">
               <FileUpload />
             </DashboardLayout>
@@ -109,7 +105,7 @@ export default function App() {
       <Route
         path="/games"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowGuest>
             <DashboardLayout title="Hall of" subtitle="Shame">
               <GamesHub />
             </DashboardLayout>

@@ -1,9 +1,15 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import "./Dashboard.css";
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, enterGuestMode } = useAuth();
+  const navigate = useNavigate();
+
+  const handleExploreGuest = () => {
+    enterGuestMode();
+    navigate("/calendar");
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
@@ -89,12 +95,13 @@ export default function Dashboard() {
         {!user && (
           <div className="text-center">
             <p className="text-sm text-slate-500 mb-3">Want to explore first?</p>
-            <Link
-              to="/explore"
+            <button
+              type="button"
+              onClick={handleExploreGuest}
               className="text-primary font-semibold hover:text-primary/80 transition-colors text-sm"
             >
               Explore as Guest →
-            </Link>
+            </button>
           </div>
         )}
 

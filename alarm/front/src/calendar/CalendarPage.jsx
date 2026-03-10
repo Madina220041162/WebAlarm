@@ -9,10 +9,12 @@ import AlarmNotification from "../components/AlarmNotification";
 import { alarmAPI } from "../services/api";
 import { requestNotificationPermission } from "../utils/alarmSound";
 import io from "socket.io-client";
+import { useAuth } from "../auth/AuthContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function CalendarPage() {
+  const { canManageAlarms, isGuest } = useAuth();
   const [view, setView] = useState("month");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [alarms, setAlarms] = useState([]);
@@ -20,6 +22,7 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
   const [editingAlarm, setEditingAlarm] = useState(null);
+  const [guestMessage, setGuestMessage] = useState("");
   const [triggeredAlarm, setTriggeredAlarm] = useState(null);
   const socketRef = useRef(null);
 
@@ -73,6 +76,11 @@ export default function CalendarPage() {
   };
 
   const handleDateClick = (date, time = null) => {
+    if (!canManageAlarms) {
+      setGuestMessage("Please log in to set your alarm.");
+      return;
+    }
+
     setEditingAlarm(null);
     setSelectedDate(date);
     setSelectedTime(time);
@@ -80,6 +88,11 @@ export default function CalendarPage() {
   };
 
   const handleEditAlarm = (alarm) => {
+    if (!canManageAlarms) {
+      setGuestMessage("Please log in to set your alarm.");
+      return;
+    }
+
     setEditingAlarm(alarm);
     setSelectedDate(new Date(alarm.time));
     setSelectedTime(null);
@@ -87,6 +100,11 @@ export default function CalendarPage() {
   };
 
   const handleDeleteAlarm = async (alarmId) => {
+    if (!canManageAlarms) {
+      setGuestMessage("Please log in to set your alarm.");
+      return;
+    }
+
     try {
       await alarmAPI.delete(alarmId);
       fetchAlarms();
@@ -146,6 +164,17 @@ export default function CalendarPage() {
   return (
     <div className="animate-in fade-in zoom-in duration-500 pb-20">
       <div className="glass-card rounded-xl p-8 min-h-[600px] flex flex-col">
+        {isGuest && (
+          <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm font-semibold">
+            Login to access all features.
+          </div>
+        )}
+        {guestMessage && (
+          <div className="mb-4 p-3 rounded-xl bg-primary/10 border border-primary/20 text-primary text-sm font-semibold">
+            {guestMessage}
+          </div>
+        )}
+
         <CalendarHeader
           view={view}
           setView={setView}

@@ -3,11 +3,14 @@ import io from 'socket.io-client';
 import AlarmNotification from '../components/AlarmNotification';
 import { alarmAPI } from '../services/api';
 import { requestNotificationPermission } from '../utils/alarmSound';
+import { useAuth } from '../auth/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Alarm() {
+  const { isGuest } = useAuth();
   const [alarms, setAlarms] = useState([]);
+  const [guestMessage, setGuestMessage] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [triggeredAlarm, setTriggeredAlarm] = useState(null);
   const socketRef = useRef(null);
@@ -75,10 +78,28 @@ export default function Alarm() {
     hour12: false
   });
 
+  const handleGuestBlockedAction = () => {
+    if (isGuest) {
+      setGuestMessage('Please log in to set your alarm.');
+      return true;
+    }
+    return false;
+  };
+
   return (
     <div className="grid grid-cols-12 gap-8 animate-in fade-in zoom-in duration-500">
       {/* Left Column: Clock & Challenges */}
       <div className="col-span-12 lg:col-span-8 space-y-8">
+        {isGuest && (
+          <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm font-semibold">
+            Login to access all features.
+          </div>
+        )}
+        {guestMessage && (
+          <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-primary text-sm font-semibold">
+            {guestMessage}
+          </div>
+        )}
         <div className="glass-card rounded-xl p-12 flex flex-col items-center justify-center min-h-[480px] relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none"></div>
           <div className="relative z-10 text-center">
@@ -113,7 +134,12 @@ export default function Alarm() {
             </div>
             <h3 className="text-lg font-bold mb-2 text-slate-800">Win The Game</h3>
             <p className="text-xs text-slate-500 leading-relaxed mb-6">Complete the pixel-art challenge to silence the beast.</p>
-            <button className="w-full py-4 bg-amber-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-amber-500/30 hover:shadow-amber-500/40 transition-all">Start Battle</button>
+            <button
+              onClick={() => handleGuestBlockedAction()}
+              className="w-full py-4 bg-amber-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-amber-500/30 hover:shadow-amber-500/40 transition-all"
+            >
+              Start Battle
+            </button>
           </div>
 
           <div className="glass-card p-8 rounded-xl hover:translate-y-[-8px] transition-all duration-300 group cursor-pointer flex flex-col items-center text-center">
@@ -122,7 +148,12 @@ export default function Alarm() {
             </div>
             <h3 className="text-lg font-bold mb-2 text-slate-800">Upload Proof</h3>
             <p className="text-xs text-slate-500 leading-relaxed mb-6">Photograph your coffee machine in active operation.</p>
-            <button className="w-full py-4 bg-blue-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transition-all">Open Camera</button>
+            <button
+              onClick={() => handleGuestBlockedAction()}
+              className="w-full py-4 bg-blue-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transition-all"
+            >
+              Open Camera
+            </button>
           </div>
 
           <div className="glass-card p-8 rounded-xl hover:translate-y-[-8px] transition-all duration-300 group cursor-pointer flex flex-col items-center text-center border-primary/20 bg-white/80">
@@ -131,7 +162,12 @@ export default function Alarm() {
             </div>
             <h3 className="text-lg font-bold mb-2 text-slate-800">Identity Check</h3>
             <p className="text-xs text-slate-500 leading-relaxed mb-6">Smile for the camera to prove you are conscious.</p>
-            <button className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm shadow-lg shadow-primary/30 hover:shadow-primary/40 transition-all">Verify Me</button>
+            <button
+              onClick={() => handleGuestBlockedAction()}
+              className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm shadow-lg shadow-primary/30 hover:shadow-primary/40 transition-all"
+            >
+              Verify Me
+            </button>
           </div>
         </div>
       </div>

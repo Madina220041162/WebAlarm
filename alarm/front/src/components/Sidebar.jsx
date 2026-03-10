@@ -2,7 +2,7 @@ import { NavLink, Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 
 export default function Sidebar() {
-    const { user, logout } = useAuth();
+    const { user, isGuest, logout } = useAuth();
 
     return (
         <aside className="w-72 glass-card rounded-xl flex flex-col justify-between p-8 h-full">
@@ -21,7 +21,7 @@ export default function Sidebar() {
                     </div>
                 </Link>
 
-                {user ? (
+                {user || isGuest ? (
                     <nav className="space-y-3">
                         <NavLink
                             to="/calendar"
@@ -116,7 +116,7 @@ export default function Sidebar() {
                     </div>
                 </div>
 
-                {user ? (
+                {user || isGuest ? (
                     <div className="bg-white/50 p-5 rounded-2xl border border-white/50">
                         <div className="flex items-center gap-3 p-2 mb-2">
                             <div className="size-10 rounded-xl bg-gradient-to-tr from-primary to-secondary p-0.5">
@@ -127,8 +127,12 @@ export default function Sidebar() {
                                 />
                             </div>
                             <div className="overflow-hidden">
-                                <p className="text-xs font-bold text-slate-700 truncate">{user?.username || "Sleepy Civilian"}</p>
-                                <p className="text-[9px] text-danger uppercase font-black tracking-tighter">Resistance is Futile</p>
+                                <p className="text-xs font-bold text-slate-700 truncate">
+                                    {isGuest ? "Guest Explorer" : user?.username || "Sleepy Civilian"}
+                                </p>
+                                <p className="text-[9px] text-danger uppercase font-black tracking-tighter">
+                                    {isGuest ? "Login For Full Access" : "Resistance is Futile"}
+                                </p>
                             </div>
                         </div>
 

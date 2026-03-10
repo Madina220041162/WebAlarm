@@ -5,6 +5,7 @@ const router = express.Router();
 
 router.get('/', alarmController.listAlarms);
 router.post('/', alarmController.createAlarm);
+router.put('/:id', alarmController.updateAlarm);
 router.delete('/:id', alarmController.deleteAlarm);
 router.post('/:id/toggle', alarmController.toggleAlarm);
 

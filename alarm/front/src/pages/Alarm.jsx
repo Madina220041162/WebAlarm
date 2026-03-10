@@ -1,11 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
+import AlarmNotification from '../components/AlarmNotification';
+import { alarmAPI } from '../services/api';
+import { requestNotificationPermission } from '../utils/alarmSound';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Alarm() {
   const [alarms, setAlarms] = useState([]);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [triggeredAlarm, setTriggeredAlarm] = useState(null);
   const socketRef = useRef(null);
 
   useEffect(() => {
@@ -14,10 +18,13 @@ export default function Alarm() {
   }, []);
 
   useEffect(() => {
+    // Request notification permission
+    requestNotificationPermission();
+
     socketRef.current = io(API_URL);
     socketRef.current.on('alarmTriggered', (data) => {
-      // Standard feature: alert on trigger
       console.log('Alarm triggered:', data);
+      setTriggeredAlarm(data);
       fetchAlarms();
     });
     fetchAlarms();
@@ -26,12 +33,40 @@ export default function Alarm() {
 
   const fetchAlarms = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/alarms`);
-      const data = await res.json();
+      const data = await alarmAPI.getAll();
       setAlarms(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching alarms:', error);
     }
+  };
+
+  const handleDismissAlarm = async () => {
+    if (triggeredAlarm) {
+      try {
+        await alarmAPI.delete(triggeredAlarm.id);
+      } catch (error) {
+        console.error("Error deleting alarm:", error);
+      }
+    }
+    setTriggeredAlarm(null);
+    fetchAlarms();
+  };
+
+  const handleSnoozeAlarm = async () => {
+    if (triggeredAlarm) {
+      try {
+        const snoozeTime = new Date(Date.now() + 5 * 60 * 1000);
+        await alarmAPI.create({
+          time: snoozeTime.toISOString(),
+          label: `${triggeredAlarm.label} (Snoozed)`,
+        });
+        await alarmAPI.delete(triggeredAlarm.id);
+      } catch (error) {
+        console.error("Error snoozing alarm:", error);
+      }
+    }
+    setTriggeredAlarm(null);
+    fetchAlarms();
   };
 
   const formattedTime = currentTime.toLocaleTimeString([], {
@@ -173,6 +208,12 @@ export default function Alarm() {
           <p className="text-xs font-medium text-slate-500">Posting your 2012 browser history to LinkedIn in 42 seconds.</p>
         </div>
       </div>
+
+      <AlarmNotification
+        alarm={triggeredAlarm}
+        onDismiss={handleDismissAlarm}
+        onSnooze={handleSnoozeAlarm}
+      />
     </div>
   );
 }

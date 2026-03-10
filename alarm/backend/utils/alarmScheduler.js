@@ -12,15 +12,24 @@ const checkDueAlarms = async () => {
       // Mark triggered
       alarm.triggered = true;
       await alarm.save();
-      // Emit event to all connected clients
-      if (_io) _io.emit('alarmTriggered', { id: alarm._id, time: alarm.time, label: alarm.label });
+      // Emit event to all connected clients with all alarm data
+      if (_io) {
+        _io.emit('alarmTriggered', { 
+          id: alarm._id, 
+          time: alarm.time, 
+          label: alarm.label,
+          sound: alarm.sound,
+          sleeperType: alarm.sleeperType
+        });
+        console.log('Alarm triggered:', alarm._id, alarm.label);
+      }
     }
   } catch (err) {
     console.error('Alarm scheduler error:', err.message);
   }
 };
 
-function startAlarmScheduler(io, intervalMs = 10000) {
+function startAlarmScheduler(io, intervalMs = 5000) {
   if (_interval) clearInterval(_interval);
   _io = io;
   _interval = setInterval(checkDueAlarms, intervalMs);

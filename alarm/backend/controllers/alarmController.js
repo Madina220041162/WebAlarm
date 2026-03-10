@@ -2,10 +2,16 @@ const Alarm = require('../models/Alarm');
 
 exports.createAlarm = async (req, res) => {
   try {
-    const { time, label, userId } = req.body;
+    const { time, label, userId, sound, sleeperType } = req.body;
     if (!time) return res.status(400).json({ message: 'time is required' });
 
-    const alarm = new Alarm({ time: new Date(time), label: label || 'Alarm', userId });
+    const alarm = new Alarm({ 
+      time: new Date(time), 
+      label: label || 'Alarm', 
+      userId,
+      sound: sound || 'rooster',
+      sleeperType: sleeperType || 'dream-drifter'
+    });
     await alarm.save();
     res.status(201).json({ message: 'Alarm created', alarm });
   } catch (error) {
@@ -19,6 +25,28 @@ exports.listAlarms = async (req, res) => {
     res.status(200).json(alarms);
   } catch (error) {
     res.status(500).json({ message: 'Error listing alarms', error: error.message });
+  }
+};
+
+exports.updateAlarm = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { time, label, enabled, sound, sleeperType } = req.body;
+    const alarm = await Alarm.findById(id);
+    if (!alarm) return res.status(404).json({ message: 'Alarm not found' });
+
+    if (time) alarm.time = new Date(time);
+    if (label !== undefined) alarm.label = label;
+    if (enabled !== undefined) alarm.enabled = enabled;
+    if (sound) alarm.sound = sound;
+    if (sleeperType) alarm.sleeperType = sleeperType;
+    // Editing an alarm should make it active again
+    alarm.triggered = false;
+
+    await alarm.save();
+    res.status(200).json({ message: 'Alarm updated', alarm });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating alarm', error: error.message });
   }
 };
 

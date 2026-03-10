@@ -3,6 +3,7 @@ import { useAuth } from "./auth/AuthContext";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
+import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import CalendarPage from "./calendar/CalendarPage";
 import Alarm from "./pages/Alarm";
@@ -51,14 +52,22 @@ function DashboardLayout({ children, title, subtitle }) {
 export default function App() {
   return (
     <Routes>
-      {/* Public routes */}
+      {/* Public non-protected routes */}
+      <Route path="/" element={<Dashboard />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/explore" element={
+        <DashboardLayout title="Explore" subtitle="KokoAlarm">
+          <div className="text-center text-slate-500 py-12">
+            <p>Login to access all features</p>
+          </div>
+        </DashboardLayout>
+      } />
 
-      {/* Protected routes */}
+      {/* Protected application routes */}
       <Route
-        path="/"
+        path="/calendar"
         element={
           <ProtectedRoute>
             <DashboardLayout title="Events" subtitle="Calendar">
@@ -108,8 +117,8 @@ export default function App() {
         }
       />
 
-      {/* Fallback */}
-      <Route path="*" element={<Login />} />
+      {/* Fallback - redirect to dashboard */}
+      <Route path="*" element={<Dashboard />} />
     </Routes>
   );
 }

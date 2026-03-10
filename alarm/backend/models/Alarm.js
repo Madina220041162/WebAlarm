@@ -6,6 +6,8 @@ const AlarmSchema = new mongoose.Schema({
   enabled: { type: Boolean, default: true },
   triggered: { type: Boolean, default: false },
   userId: { type: String, required: false },
+  sound: { type: String, default: 'rooster' },
+  sleeperType: { type: String, default: 'dream-drifter' },
   createdAt: { type: Date, default: Date.now },
 });
 

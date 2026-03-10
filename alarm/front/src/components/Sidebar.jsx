@@ -2,63 +2,63 @@ import { NavLink } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 
 export default function Sidebar() {
-    const { user, logout } = useAuth();
+    const { user, logout, explosionMode } = useAuth();
 
     return (
-        <aside className="w-72 glass-card rounded-xl flex flex-col justify-between p-8 h-full">
+        <aside className="w-72 glass-card rounded-xl flex flex-col justify-between p-8 h-full transition-all duration-300">
             <div className="space-y-10">
                 <div className="flex items-center gap-3">
                     <div className="size-12 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white shadow-lg shadow-primary/20">
                         <span className="material-symbols-outlined text-3xl">notifications_active</span>
                     </div>
                     <div>
-                        <h2 className="font-extrabold text-xl tracking-tight text-slate-900 leading-none">
+                        <h2 className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white leading-none">
                             Murgi<span className="text-primary">Klok</span>
                         </h2>
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                            Battle Premium
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                            Wake up
                         </span>
                     </div>
                 </div>
 
                 <nav className="space-y-3">
                     <NavLink
-                        to="/alarm"
+                        to="/"
                         className={({ isActive }) =>
-                            `flex items-center gap-4 px-5 py-4 rounded-2xl font-semibold group transition-all duration-300 ${isActive ? "active-pill" : "glass-pill text-slate-500 hover:text-primary"
+                            `flex items-center gap-4 px-5 py-4 rounded-2xl font-semibold group transition-all duration-300 ${isActive ? "active-pill" : "glass-pill text-slate-700 hover:text-primary dark:text-slate-400"
                             }`
                         }
                     >
-                        <span className="material-symbols-outlined text-2xl">swords</span>
-                        <span>Battle Zone</span>
+                        <span className="material-symbols-outlined text-2xl">notifications_active</span>
+                        <span>Alarm Control</span>
                     </NavLink>
 
                     <NavLink
                         to="/notes"
                         className={({ isActive }) =>
-                            `flex items-center gap-4 px-5 py-4 rounded-2xl font-semibold group transition-all duration-300 ${isActive ? "active-pill" : "glass-pill text-slate-500 hover:text-primary"
+                            `flex items-center gap-4 px-5 py-4 rounded-2xl font-semibold group transition-all duration-300 ${isActive ? "active-pill" : "glass-pill text-slate-700 hover:text-primary dark:text-slate-400"
                             }`
                         }
                     >
-                        <span className="material-symbols-outlined text-2xl">auto_fix_high</span>
-                        <span>The Roast Vault</span>
+                        <span className="material-symbols-outlined text-2xl">description</span>
+                        <span>Penalty Notes</span>
                     </NavLink>
 
                     <NavLink
-                        to="/games"
+                        to="/calendar"
                         className={({ isActive }) =>
-                            `flex items-center gap-4 px-5 py-4 rounded-2xl font-semibold group transition-all duration-300 ${isActive ? "active-pill" : "glass-pill text-slate-500 hover:text-primary"
+                            `flex items-center gap-4 px-5 py-4 rounded-2xl font-semibold group transition-all duration-300 ${isActive ? "active-pill" : "glass-pill text-slate-700 hover:text-primary dark:text-slate-400"
                             }`
                         }
                     >
-                        <span className="material-symbols-outlined text-2xl">history</span>
-                        <span>Hall of Shame</span>
+                        <span className="material-symbols-outlined text-2xl">calendar_month</span>
+                        <span>Mission Schedule</span>
                     </NavLink>
 
                     <NavLink
                         to="/settings"
                         className={({ isActive }) =>
-                            `flex items-center gap-4 px-5 py-4 rounded-2xl font-semibold group transition-all duration-300 ${isActive ? "active-pill" : "glass-pill text-slate-500 hover:text-primary"
+                            `flex items-center gap-4 px-5 py-4 rounded-2xl font-semibold group transition-all duration-300 ${isActive ? "active-pill" : "glass-pill text-slate-700 hover:text-primary dark:text-slate-400"
                             }`
                         }
                     >
@@ -67,48 +67,54 @@ export default function Sidebar() {
                     </NavLink>
                 </nav>
 
-                <div className="p-5 rounded-2xl bg-slate-50/50 border border-slate-100">
+                <div className="p-5 rounded-2xl bg-slate-50/50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
                     <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold mb-3">
                         Threat Severity
                     </p>
                     <div className="flex items-end gap-2 mb-2">
-                        <span className="text-2xl font-black text-danger">CRITICAL</span>
+                        <span className={`text-2xl font-black ${explosionMode ? 'text-danger animate-pulse' : 'text-primary'}`}>
+                            {explosionMode ? 'CRITICAL' : 'OPTIMAL'}
+                        </span>
                     </div>
-                    <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                        <div className="bg-gradient-to-r from-danger to-secondary h-full w-full"></div>
+                    <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                        <div className={`h-full transition-all duration-1000 ${explosionMode ? 'bg-gradient-to-r from-danger to-secondary w-full' : 'bg-primary w-1/3'}`}></div>
                     </div>
                 </div>
             </div>
 
             <div className="space-y-4">
-                <div className="bg-white/50 p-5 rounded-2xl border border-white/50">
+                <div className="bg-white/50 dark:bg-slate-800/30 p-5 rounded-2xl border border-white/50 dark:border-slate-700">
                     <div className="flex justify-between text-[11px] font-bold uppercase mb-2 text-slate-500">
                         <span>Alarm Volume</span>
-                        <span className="text-danger">Maximized</span>
+                        <span className={explosionMode ? 'text-danger' : 'text-primary'}>
+                            {explosionMode ? 'MAXIMIZED' : 'STANDARD'}
+                        </span>
                     </div>
-                    <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden mb-4">
-                        <div className="bg-primary h-full w-[100%]"></div>
+                    <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden mb-4">
+                        <div className={`bg-primary h-full transition-all duration-1000 ${explosionMode ? 'w-full' : 'w-[50%]'}`}></div>
                     </div>
                     <div className="flex justify-between text-[11px] font-bold uppercase mb-2 text-slate-500">
                         <span>User Patience</span>
-                        <span className="text-danger">0%</span>
+                        <span className={explosionMode ? 'text-danger' : 'text-primary'}>
+                            {explosionMode ? '0%' : '100%'}
+                        </span>
                     </div>
-                    <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                        <div className="bg-slate-300 h-full w-0"></div>
+                    <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                        <div className={`transition-all duration-1000 h-full ${explosionMode ? 'bg-slate-300 w-0' : 'bg-primary w-full'}`}></div>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3 p-2 mb-2">
                     <div className="size-10 rounded-xl bg-gradient-to-tr from-primary to-secondary p-0.5">
-                        <img
-                            alt="Profile"
-                            className="w-full h-full rounded-[0.7rem] object-cover"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQzDBvYJeWvZovrleKRpCnQ0eEId1nhNSik1yeaH9Rql8r_uOX6iiz-uWe_9Mq7ZG5rBZwopAZh1emuWEFqFbtlZFofwGHAV0_mo69SOX80wdGRgshOPEeV7hPmRh3XKqvwpQJttavY6wlkyuOdXqs3vZjY4vDZ7ubjdMKJuhDtXj5lyiRcpC3IST8EoO0HodtEc3d5fa_5bvU7ltYzf58WjA3YZO7D-c7cPWQeXgu1nJJmkm4iuGt6YRpbvAXbZlmZEQYaRkmR8zY"
-                        />
+                        <div className="w-full h-full rounded-[0.7rem] bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
+                            <span className="material-symbols-outlined text-slate-400">person</span>
+                        </div>
                     </div>
                     <div className="overflow-hidden">
-                        <p className="text-xs font-bold text-slate-700 truncate">{user?.username || "Sleepy Civilian"}</p>
-                        <p className="text-[9px] text-danger uppercase font-black tracking-tighter">Resistance is Futile</p>
+                        <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{user?.username || "Sleepy Civilian"}</p>
+                        <p className={`text-[9px] uppercase font-black tracking-tighter ${explosionMode ? 'text-danger' : 'text-primary'}`}>
+                            {explosionMode ? 'Resistance is Futile' : 'At Ease Soldier'}
+                        </p>
                     </div>
                 </div>
 

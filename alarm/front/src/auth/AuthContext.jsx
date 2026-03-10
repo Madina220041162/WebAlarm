@@ -13,11 +13,49 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     const userData = localStorage.getItem("user");
+    const savedTheme = localStorage.getItem("theme") || "light";
+    const savedExplosion = localStorage.getItem("explosionMode") === "true";
+
     if (token && userData) {
       setUser(JSON.parse(userData));
     }
+    setTheme(savedTheme);
+    setExplosionMode(savedExplosion);
     setLoading(false);
+
+    // Apply theme on load
+    if (savedTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
   }, []);
+
+  const [theme, setTheme] = useState("light");
+  const [explosionMode, setExplosionMode] = useState(false);
+
+  const toggleTheme = () => {
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
+    if (newTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  };
+
+  const toggleExplosionMode = () => {
+    const newVal = !explosionMode;
+    setExplosionMode(newVal);
+    localStorage.setItem("explosionMode", newVal);
+  };
+
+  const updateUser = (updatedUser) => {
+    const newUser = { ...user, ...updatedUser };
+    setUser(newUser);
+    localStorage.setItem("user", JSON.stringify(newUser));
+  };
 
   const login = async (username, password) => {
     try {
@@ -84,7 +122,10 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, error, loading }}>
+    <AuthContext.Provider value={{
+      user, login, register, logout, error, loading,
+      updateUser, theme, toggleTheme, explosionMode, toggleExplosionMode
+    }}>
       {children}
     </AuthContext.Provider>
   );

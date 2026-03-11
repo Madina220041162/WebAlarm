@@ -32,7 +32,7 @@ export default function InteractiveWave() {
 
       draw() {
         const isDark = document.documentElement.classList.contains('dark');
-        ctx.fillStyle = isDark ? 'rgba(83, 210, 45, 0.45)' : 'rgba(99, 102, 241, 0.6)';
+        ctx.fillStyle = isDark ? 'rgba(83, 210, 45, 0.45)' : 'rgba(128, 138, 56, 0.62)';
         ctx.beginPath();
         ctx.arc(this.x, this.y, 1.5, 0, Math.PI * 2);
         ctx.closePath();
@@ -89,7 +89,7 @@ export default function InteractiveWave() {
             const isDark = document.documentElement.classList.contains('dark');
             ctx.strokeStyle = isDark
               ? `rgba(83, 210, 45, ${opacityValue * 0.25})`
-              : `rgba(99, 102, 241, ${opacityValue * 0.3})`;
+              : `rgba(128, 138, 56, ${opacityValue * 0.34})`;
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(particles[a].x, particles[a].y);

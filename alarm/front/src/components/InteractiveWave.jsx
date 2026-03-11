@@ -31,7 +31,7 @@ export default function InteractiveWave() {
       }
 
       draw() {
-        ctx.fillStyle = 'rgba(83, 210, 45, 0.15)'; // Primary color with low opacity
+        ctx.fillStyle = 'rgba(83, 210, 45, 0.45)'; // Primary color with low opacity
         ctx.beginPath();
         ctx.arc(this.x, this.y, 1.5, 0, Math.PI * 2);
         ctx.closePath();
@@ -85,7 +85,7 @@ export default function InteractiveWave() {
 
           if (distance < 35) {
             opacityValue = 1 - (distance / 35);
-            ctx.strokeStyle = `rgba(83, 210, 45, ${opacityValue * 0.1})`;
+            ctx.strokeStyle = `rgba(83, 210, 45, ${opacityValue * 0.25})`;
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(particles[a].x, particles[a].y);

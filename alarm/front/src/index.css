@@ -12,11 +12,11 @@
     --secondary: #ec4899;
     --danger: #ef4444;
     --success: #10b981;
-    --background: #f8fafc;
-    --foreground: #0f172a;
-    --card: #ffffff;
-    --border: #e2e8f0;
-    --muted: #64748b;
+    --background: #06111e;
+    --foreground: #e2e8f0;
+    --card: #0d1f35;
+    --border: #1a3a58;
+    --muted: #94a3b8;
   }
 
   .dark {
@@ -31,10 +31,11 @@
   }
 
   body {
-    @apply text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-500 antialiased;
+    @apply text-slate-100 dark:text-slate-100 min-h-screen transition-colors duration-500 antialiased;
     font-family: 'Plus Jakarta Sans', sans-serif;
-    background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.05), transparent 400px),
-                radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.05), transparent 400px),
+    background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.18), transparent 500px),
+                radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.12), transparent 500px),
+                radial-gradient(circle at center, rgba(14, 52, 96, 0.6), transparent 800px),
                 var(--background);
     background-attachment: fixed;
   }
@@ -48,8 +49,8 @@
 
 @layer components {
   .glass-card {
-    @apply bg-white/80 dark:bg-slate-900/40 backdrop-blur-2xl border border-slate-200/50 dark:border-white/10 
-           shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]
+    @apply bg-white/5 dark:bg-slate-900/40 backdrop-blur-2xl border border-white/10 dark:border-white/10 
+           shadow-[0_8px_32px_0_rgba(0,10,40,0.3)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]
            transition-all duration-300;
   }
 

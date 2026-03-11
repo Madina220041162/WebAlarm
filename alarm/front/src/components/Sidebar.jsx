@@ -1,8 +1,14 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 
 export default function Sidebar() {
     const { user, logout, explosionMode } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate("/");
+    };
 
     return (
         <aside className="w-72 glass-card rounded-xl flex flex-col justify-between p-8 h-full transition-all duration-300">
@@ -104,27 +110,23 @@ export default function Sidebar() {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-2 mb-2">
-                    <div className="size-10 rounded-xl bg-gradient-to-tr from-primary to-secondary p-0.5">
-                        <div className="w-full h-full rounded-[0.7rem] bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
-                            <span className="material-symbols-outlined text-slate-400">person</span>
-                        </div>
-                    </div>
-                    <div className="overflow-hidden">
-                        <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{user?.username || "Sleepy Civilian"}</p>
-                        <p className={`text-[9px] uppercase font-black tracking-tighter ${explosionMode ? 'text-danger' : 'text-primary'}`}>
-                            {explosionMode ? 'Resistance is Futile' : 'At Ease Soldier'}
-                        </p>
-                    </div>
-                </div>
-
-                <button
-                    onClick={logout}
-                    className="w-full py-4 glass-pill text-slate-400 font-bold rounded-2xl flex items-center justify-center gap-2"
-                >
-                    <span className="material-symbols-outlined">lock_open</span>
-                    <span>Logout</span>
-                </button>
+                {user ? (
+                    <button
+                        onClick={handleLogout}
+                        className="w-full py-4 glass-pill text-slate-400 hover:text-danger dark:hover:text-danger font-bold rounded-2xl flex items-center justify-center gap-2 transition-colors"
+                    >
+                        <span className="material-symbols-outlined text-xl">logout</span>
+                        <span>Logout Session</span>
+                    </button>
+                ) : (
+                    <NavLink
+                        to="/login"
+                        className="w-full py-4 premium-gradient text-white font-black rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all"
+                    >
+                        <span className="material-symbols-outlined mr-2">login</span>
+                        Authorized Login
+                    </NavLink>
+                )}
             </div>
         </aside>
     );

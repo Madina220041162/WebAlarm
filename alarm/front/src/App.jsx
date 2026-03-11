@@ -12,6 +12,7 @@ import GamesHub from "./games/GamesHub";
 import Settings from "./pages/Settings";
 import IdentityCheck from "./pages/IdentityCheck";
 import Sidebar from "./components/Sidebar";
+import InteractiveWave from "./components/InteractiveWave";
 import "./App.css";
 
 function DashboardLayout({ children, title, subtitle }) {
@@ -32,7 +33,7 @@ function DashboardLayout({ children, title, subtitle }) {
           </div>
           <div className="flex items-center gap-4 group">
             <div className="text-right">
-              <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{user?.username || "Sleepy Civilian"}</p>
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{user?.username || "Sleepy Visitor"}</p>
               <p className={`text-[9px] uppercase font-black tracking-tighter ${explosionMode ? 'text-danger animate-pulse' : 'text-primary'}`}>
                 {explosionMode ? 'Resistance is Futile' : 'At Ease Soldier'}
               </p>
@@ -52,63 +53,57 @@ function DashboardLayout({ children, title, subtitle }) {
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <InteractiveWave />
+      <Routes>
       {/* Public routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
-      {/* Protected routes */}
+      {/* Publicly Accessible Routes */}
       <Route
         path="/"
         element={
-          <ProtectedRoute>
-            <DashboardLayout title="Active" subtitle="Alarms">
-              <Alarm />
-            </DashboardLayout>
-          </ProtectedRoute>
+          <DashboardLayout title="Active" subtitle="Alarms">
+            <Alarm />
+          </DashboardLayout>
         }
       />
       <Route
         path="/calendar"
         element={
-          <ProtectedRoute>
-            <DashboardLayout title="Mission" subtitle="Schedule">
-              <CalendarPage />
-            </DashboardLayout>
-          </ProtectedRoute>
+          <DashboardLayout title="Mission" subtitle="Schedule">
+            <CalendarPage />
+          </DashboardLayout>
         }
       />
       <Route
         path="/notes"
         element={
-          <ProtectedRoute>
-            <DashboardLayout title="Penalty" subtitle="Notes">
-              <Notes />
-            </DashboardLayout>
-          </ProtectedRoute>
+          <DashboardLayout title="Penalty" subtitle="Notes">
+            <Notes />
+          </DashboardLayout>
         }
       />
       <Route
         path="/files"
         element={
-          <ProtectedRoute>
-            <DashboardLayout title="Vault" subtitle="Storage">
-              <FileUpload />
-            </DashboardLayout>
-          </ProtectedRoute>
+          <DashboardLayout title="Vault" subtitle="Storage">
+            <FileUpload />
+          </DashboardLayout>
         }
       />
       <Route
         path="/games"
         element={
-          <ProtectedRoute>
-            <DashboardLayout title="Wake-up" subtitle="Rankings">
-              <GamesHub />
-            </DashboardLayout>
-          </ProtectedRoute>
+          <DashboardLayout title="Wake-up" subtitle="Rankings">
+            <GamesHub />
+          </DashboardLayout>
         }
       />
+
+      {/* Auth-Required Routes */}
       <Route
         path="/settings"
         element={
@@ -131,7 +126,15 @@ export default function App() {
       />
 
       {/* Fallback */}
-      <Route path="*" element={<Login />} />
-    </Routes >
+      <Route
+        path="*"
+        element={
+          <DashboardLayout title="Active" subtitle="Alarms">
+            <Alarm />
+          </DashboardLayout>
+        }
+      />
+    </Routes>
+    </>
   );
 }

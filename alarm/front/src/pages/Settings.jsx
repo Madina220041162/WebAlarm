@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../auth/AuthContext";
-import axios from "axios";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
+import { apiCall } from "../services/api";
 
 export default function Settings() {
     const {
@@ -31,14 +29,13 @@ export default function Settings() {
         setMessage({ type: "", text: "" });
 
         try {
-            const token = localStorage.getItem("authToken");
-            const res = await axios.put(
-                `${API_URL}/api/auth/profile`,
-                { username, email },
-                { headers: { Authorization: `Bearer ${token}` } }
+            const res = await apiCall(
+                "/api/auth/profile",
+                "PUT",
+                { username, email }
             );
 
-            const updatedUser = { ...user, ...res.data.user };
+            const updatedUser = { ...user, ...res.user };
             updateUser(updatedUser);
             setMessage({ type: "success", text: "Profile updated successfully!" });
         } catch (error) {
@@ -60,11 +57,10 @@ export default function Settings() {
         setMessage({ type: "", text: "" });
 
         try {
-            const token = localStorage.getItem("authToken");
-            await axios.put(
-                `${API_URL}/api/auth/profile`,
-                { password },
-                { headers: { Authorization: `Bearer ${token}` } }
+            await apiCall(
+                "/api/auth/profile",
+                "PUT",
+                { password }
             );
 
             setMessage({ type: "success", text: "Password updated successfully!" });

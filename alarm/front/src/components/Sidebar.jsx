@@ -1,8 +1,14 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 
 export default function Sidebar() {
     const { user, logout, explosionMode } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate("/");
+    };
 
     return (
         <aside className="w-72 glass-card rounded-xl flex flex-col justify-between p-8 h-full transition-all duration-300">
@@ -106,7 +112,7 @@ export default function Sidebar() {
 
                 {user ? (
                     <button
-                        onClick={logout}
+                        onClick={handleLogout}
                         className="w-full py-4 glass-pill text-slate-400 hover:text-danger dark:hover:text-danger font-bold rounded-2xl flex items-center justify-center gap-2 transition-colors"
                     >
                         <span className="material-symbols-outlined text-xl">logout</span>

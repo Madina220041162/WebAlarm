@@ -32,7 +32,7 @@ function DashboardLayout({ children, title, subtitle }) {
           </div>
           <div className="flex items-center gap-4 group">
             <div className="text-right">
-              <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{user?.username || "Sleepy Civilian"}</p>
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{user?.username || "Sleepy Visitor"}</p>
               <p className={`text-[9px] uppercase font-black tracking-tighter ${explosionMode ? 'text-danger animate-pulse' : 'text-primary'}`}>
                 {explosionMode ? 'Resistance is Futile' : 'At Ease Soldier'}
               </p>

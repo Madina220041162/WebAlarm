@@ -112,12 +112,16 @@ export default function Alarm() {
             </h2>
             <div className="flex gap-4 justify-center">
               <div className="glass-pill px-8 py-6 rounded-3xl text-center min-w-[120px]">
-                <p className="text-4xl font-extrabold text-primary">00</p>
+                <p className="text-4xl font-extrabold text-primary">
+                  {String(currentTime.getMinutes()).padStart(2, '0')}
+                </p>
                 <p className="text-[10px] font-bold uppercase text-slate-400 mt-1 tracking-widest">Minutes</p>
               </div>
               <div className="flex items-center text-4xl font-light text-slate-300">:</div>
               <div className="glass-pill px-8 py-6 rounded-3xl text-center min-w-[120px] ring-2 ring-primary/20">
-                <p className="text-4xl font-extrabold text-primary">42</p>
+                <p className="text-4xl font-extrabold text-primary">
+                  {String(currentTime.getSeconds()).padStart(2, '0')}
+                </p>
                 <p className="text-[10px] font-bold uppercase text-slate-400 mt-1 tracking-widest">Seconds</p>
               </div>
             </div>
@@ -239,27 +243,75 @@ export default function Alarm() {
           </div>
         </div>
 
-        <div className="glass-card p-8 rounded-xl flex flex-col items-center">
-          <h3 className="text-sm font-extrabold mb-8 opacity-40 uppercase tracking-widest text-center">Failure Progress</h3>
-          <div className="relative size-56">
+        <div className="glass-card p-10 rounded-3xl flex flex-col items-center relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+            <span className="material-symbols-outlined text-8xl">trending_down</span>
+          </div>
+          
+          <h3 className="text-xs font-black mb-10 opacity-40 uppercase tracking-[0.3em] text-center border-b border-slate-200 dark:border-white/5 pb-4 w-full">
+            Failure Progress
+          </h3>
+          
+          {/* Functional Circle Progress */}
+          <div className="relative size-60">
             <svg className="w-full h-full transform -rotate-90">
-              <circle className="text-slate-100 dark:text-slate-800" cx="112" cy="112" fill="transparent" r="95" stroke="currentColor" strokeWidth="12"></circle>
-              <circle className="text-primary" cx="112" cy="112" fill="transparent" r="95" stroke="currentColor" strokeDasharray="596" strokeDashoffset={`${596 - (596 * (explosionMode ? 0.95 : 0.4))}`} strokeLinecap="round" strokeWidth="12"></circle>
+              <circle 
+                className="text-slate-100 dark:text-slate-800/50" 
+                cx="120" cy="120" r="105" 
+                fill="transparent" stroke="currentColor" strokeWidth="16"
+              ></circle>
+              {(() => {
+                const total = alarms.length || 1;
+                const pastAlarms = alarms.filter(a => new Date(a.time) < currentTime).length;
+                const percent = Math.min(Math.round((pastAlarms / total) * 100), 100);
+                const offset = 660 - (660 * percent) / 100;
+                return (
+                  <circle 
+                    className="text-indigo-600 dark:text-indigo-400 drop-shadow-[0_0_12px_rgba(99,102,241,0.5)]" 
+                    cx="120" cy="120" r="105" 
+                    fill="transparent" stroke="currentColor" strokeWidth="16" 
+                    strokeDasharray="660" strokeDashoffset={offset} 
+                    strokeLinecap="round"
+                  ></circle>
+                );
+              })()}
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-5xl font-black text-slate-900 dark:text-white transition-all duration-300">{explosionMode ? '95%' : '40%'}</span>
-              <span className="text-[10px] opacity-40 font-bold uppercase tracking-widest mt-1">Defeat Level</span>
+              {(() => {
+                const total = alarms.length || 1;
+                const pastAlarms = alarms.filter(a => new Date(a.time) < currentTime).length;
+                const percent = Math.min(Math.round((pastAlarms / total) * 100), 100);
+                return (
+                  <>
+                    <span className="text-6xl font-black text-slate-900 dark:text-white transition-all duration-300">
+                      {percent}%
+                    </span>
+                    <span className="text-[10px] opacity-40 font-bold uppercase tracking-widest mt-2">Defeat Level</span>
+                  </>
+                );
+              })()}
             </div>
           </div>
-          <div className="mt-8 grid grid-cols-2 gap-4 w-full">
-            <div className="text-center p-4 rounded-2xl bg-white/50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-              <p className="text-2xl font-black text-primary">{explosionMode ? '42' : '4'}</p>
-              <p className="text-[10px] uppercase opacity-40 font-bold tracking-wider mt-1">Failed Starts</p>
-            </div>
-            <div className="text-center p-4 rounded-2xl bg-white/50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-              <p className="text-2xl font-black text-danger">{explosionMode ? 'ZERO' : 'LOW'}</p>
-              <p className="text-[10px] uppercase opacity-40 font-bold tracking-wider mt-1">Social Credit</p>
-            </div>
+
+          <div className="mt-10 grid grid-cols-2 gap-4 w-full">
+            {(() => {
+              const pastAlarms = alarms.filter(a => new Date(a.time) < currentTime).length;
+              const creditText = pastAlarms === 0 ? "EXCELLENT" : pastAlarms < 2 ? "STABLE" : pastAlarms < 4 ? "LOW" : "BANKRUPT";
+              const creditColor = pastAlarms === 0 ? "text-success" : pastAlarms < 2 ? "text-primary" : "text-danger";
+
+              return (
+                <>
+                  <div className="text-center p-5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 group-hover:border-primary/20 transition-all">
+                    <p className="text-3xl font-black text-indigo-600 dark:text-indigo-400">{pastAlarms}</p>
+                    <p className="text-[10px] uppercase opacity-40 font-bold tracking-wider mt-1">Failed Starts</p>
+                  </div>
+                  <div className="text-center p-5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 group-hover:border-indigo-400/20 transition-all">
+                    <p className={`text-xl font-black ${creditColor} tracking-tighter`}>{creditText}</p>
+                    <p className="text-[10px] uppercase opacity-40 font-bold tracking-wider mt-1">Social Credit</p>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
       </div>

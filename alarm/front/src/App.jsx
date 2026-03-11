@@ -58,57 +58,49 @@ export default function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
-      {/* Protected routes */}
+      {/* Publicly Accessible Routes */}
       <Route
         path="/"
         element={
-          <ProtectedRoute>
-            <DashboardLayout title="Active" subtitle="Alarms">
-              <Alarm />
-            </DashboardLayout>
-          </ProtectedRoute>
+          <DashboardLayout title="Active" subtitle="Alarms">
+            <Alarm />
+          </DashboardLayout>
         }
       />
       <Route
         path="/calendar"
         element={
-          <ProtectedRoute>
-            <DashboardLayout title="Mission" subtitle="Schedule">
-              <CalendarPage />
-            </DashboardLayout>
-          </ProtectedRoute>
+          <DashboardLayout title="Mission" subtitle="Schedule">
+            <CalendarPage />
+          </DashboardLayout>
         }
       />
       <Route
         path="/notes"
         element={
-          <ProtectedRoute>
-            <DashboardLayout title="Penalty" subtitle="Notes">
-              <Notes />
-            </DashboardLayout>
-          </ProtectedRoute>
+          <DashboardLayout title="Penalty" subtitle="Notes">
+            <Notes />
+          </DashboardLayout>
         }
       />
       <Route
         path="/files"
         element={
-          <ProtectedRoute>
-            <DashboardLayout title="Vault" subtitle="Storage">
-              <FileUpload />
-            </DashboardLayout>
-          </ProtectedRoute>
+          <DashboardLayout title="Vault" subtitle="Storage">
+            <FileUpload />
+          </DashboardLayout>
         }
       />
       <Route
         path="/games"
         element={
-          <ProtectedRoute>
-            <DashboardLayout title="Wake-up" subtitle="Rankings">
-              <GamesHub />
-            </DashboardLayout>
-          </ProtectedRoute>
+          <DashboardLayout title="Wake-up" subtitle="Rankings">
+            <GamesHub />
+          </DashboardLayout>
         }
       />
+
+      {/* Auth-Required Routes */}
       <Route
         path="/settings"
         element={
@@ -131,7 +123,7 @@ export default function App() {
       />
 
       {/* Fallback */}
-      <Route path="*" element={<Login />} />
+      <Route path="*" element={<Alarm />} />
     </Routes >
   );
 }

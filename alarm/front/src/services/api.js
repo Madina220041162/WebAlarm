@@ -42,26 +42,27 @@ export const apiCall = async (endpoint, method = "GET", body = null) => {
 
 // Specific API calls
 export const notesAPI = {
-  getAll: () => apiCall("/notes"),
-  create: (data) => apiCall("/notes", "POST", data),
-  update: (id, data) => apiCall(`/notes/${id}`, "PUT", data),
-  delete: (id) => apiCall(`/notes/${id}`, "DELETE"),
+  getAll: () => apiCall("/api/notes"),
+  create: (data) => apiCall("/api/notes", "POST", data),
+  update: (id, data) => apiCall(`/api/notes/${id}`, "PUT", data),
+  delete: (id) => apiCall(`/api/notes/${id}`, "DELETE"),
 };
 
 export const alarmAPI = {
-  getAll: () => apiCall("/alarms"),
-  create: (data) => apiCall("/alarms", "POST", data),
-  update: (id, data) => apiCall(`/alarms/${id}`, "PUT", data),
-  delete: (id) => apiCall(`/alarms/${id}`, "DELETE"),
+  getAll: () => apiCall("/api/alarms"),
+  create: (data) => apiCall("/api/alarms", "POST", data),
+  update: (id, data) => apiCall(`/api/alarms/${id}`, "PUT", data),
+  delete: (id) => apiCall(`/api/alarms/${id}`, "DELETE"),
+  toggle: (id) => apiCall(`/api/alarms/${id}/toggle`, "POST"),
 };
 
 export const filesAPI = {
-  getAll: () => apiCall("/files"),
+  getAll: () => apiCall("/api/files"),
   upload: (file) => {
     const formData = new FormData();
     formData.append("file", file);
     const token = localStorage.getItem("authToken");
-    return fetch(`${API_URL}/files`, {
+    return fetch(`${API_URL}/api/files`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -69,10 +70,10 @@ export const filesAPI = {
       body: formData,
     }).then((res) => res.json());
   },
-  delete: (id) => apiCall(`/files/${id}`, "DELETE"),
+  delete: (id) => apiCall(`/api/files/${id}`, "DELETE"),
 };
 
 export const gamesAPI = {
-  getScores: () => apiCall("/game-scores"),
-  saveScore: (data) => apiCall("/game-scores", "POST", data),
+  getScores: () => apiCall("/api/game-scores"),
+  saveScore: (data) => apiCall("/api/game-scores", "POST", data),
 };

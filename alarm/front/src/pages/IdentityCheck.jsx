@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom";
 import * as blazeface from "@tensorflow-models/blazeface";
 import "@tensorflow/tfjs";
 import { filesAPI } from "../services/api";
+import {
+  getActiveProofChallenge,
+  saveProofVerificationResult,
+} from "../utils/proofChallenge";
 
 // Required detected frames before verification is accepted (~3 s at 30 fps)
 const REQUIRED_FRAMES = 90;
@@ -122,6 +126,18 @@ export default function IdentityCheck() {
                         console.warn("Snapshot upload failed:", e);
                     } finally {
                         setSaving(false);
+                    }
+
+                    // Save proof verification so alarm can be dismissed
+                    const challenge = getActiveProofChallenge();
+                    if (challenge) {
+                        saveProofVerificationResult({
+                            passed: true,
+                            method: "face-scan",
+                            alarmId: challenge.alarmId,
+                            target: challenge.target,
+                            verifiedAt: Date.now(),
+                        });
                     }
 
                     setStatus("success");
@@ -315,6 +331,11 @@ export default function IdentityCheck() {
                         <p className="text-center text-xs text-slate-400 font-semibold">
                             Snapshot saved to <span className="text-primary">File Uploads</span>
                         </p>
+                        {getActiveProofChallenge() && (
+                            <p className="text-center text-xs text-emerald-600 font-bold">
+                                ✓ Alarm can now be dismissed — go back to the Calendar
+                            </p>
+                        )}
                         <button
                             onClick={handleFinish}
                             className="w-full py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black shadow-xl hover:scale-105 active:scale-95 transition-all uppercase tracking-widest"

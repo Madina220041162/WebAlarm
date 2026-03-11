@@ -109,24 +109,17 @@ export default function Sidebar() {
                         onClick={logout}
                         className="w-full py-4 glass-pill text-slate-400 hover:text-danger dark:hover:text-danger font-bold rounded-2xl flex items-center justify-center gap-2 transition-colors"
                     >
-                        <span className="material-symbols-outlined">logout</span>
+                        <span className="material-symbols-outlined text-xl">logout</span>
                         <span>Logout Session</span>
                     </button>
                 ) : (
-                    <div className="grid grid-cols-2 gap-3">
-                        <NavLink
-                            to="/login"
-                            className="py-4 glass-pill text-primary font-black rounded-2xl flex items-center justify-center text-xs hover:bg-primary/10 transition-all"
-                        >
-                            Login
-                        </NavLink>
-                        <NavLink
-                            to="/register"
-                            className="py-4 premium-gradient text-white font-black rounded-2xl flex items-center justify-center text-xs shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all"
-                        >
-                            Join
-                        </NavLink>
-                    </div>
+                    <NavLink
+                        to="/login"
+                        className="w-full py-4 premium-gradient text-white font-black rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all"
+                    >
+                        <span className="material-symbols-outlined mr-2">login</span>
+                        Authorized Login
+                    </NavLink>
                 )}
             </div>
         </aside>

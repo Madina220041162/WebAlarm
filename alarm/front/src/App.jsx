@@ -123,7 +123,14 @@ export default function App() {
       />
 
       {/* Fallback */}
-      <Route path="*" element={<Alarm />} />
+      <Route
+        path="*"
+        element={
+          <DashboardLayout title="Active" subtitle="Alarms">
+            <Alarm />
+          </DashboardLayout>
+        }
+      />
     </Routes >
   );
 }

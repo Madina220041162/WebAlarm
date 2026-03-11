@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import * as blazeface from "@tensorflow-models/blazeface";
 import "@tensorflow/tfjs";
+import { filesAPI } from "../services/api";
 
 // Required detected frames before verification is accepted (~3 s at 30 fps)
 const REQUIRED_FRAMES = 90;
@@ -11,6 +12,8 @@ export default function IdentityCheck() {
     const [progress, setProgress] = useState(0);
     const [faceDetected, setFaceDetected] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
+    const [snapshotDataUrl, setSnapshotDataUrl] = useState(null);
+    const [saving, setSaving] = useState(false);
     const navigate = useNavigate();
 
     const videoRef = useRef(null);
@@ -92,6 +95,35 @@ export default function IdentityCheck() {
 
                 if (detectedFrames.current >= REQUIRED_FRAMES) {
                     stopCamera();
+
+                    // Capture a snapshot from the video frame
+                    const snapCanvas = document.createElement("canvas");
+                    const vid = videoRef.current;
+                    snapCanvas.width = vid.videoWidth;
+                    snapCanvas.height = vid.videoHeight;
+                    const snapCtx = snapCanvas.getContext("2d");
+                    // Mirror to match what the user was seeing
+                    snapCtx.translate(snapCanvas.width, 0);
+                    snapCtx.scale(-1, 1);
+                    snapCtx.drawImage(vid, 0, 0);
+                    const dataUrl = snapCanvas.toDataURL("image/jpeg", 0.9);
+                    setSnapshotDataUrl(dataUrl);
+
+                    // Upload to backend so it appears in File Uploads
+                    try {
+                        setSaving(true);
+                        snapCanvas.toBlob(async (blob) => {
+                            const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+                            const file = new File([blob], `identity-scan-${timestamp}.jpg`, { type: "image/jpeg" });
+                            await filesAPI.upload(file);
+                        }, "image/jpeg", 0.9);
+                    } catch (e) {
+                        // Upload failure is non-critical — verification still succeeded
+                        console.warn("Snapshot upload failed:", e);
+                    } finally {
+                        setSaving(false);
+                    }
+
                     setStatus("success");
                     return;
                 }
@@ -117,6 +149,7 @@ export default function IdentityCheck() {
         setStatus("idle");
         setProgress(0);
         setFaceDetected(false);
+        setSnapshotDataUrl(null);
         detectedFrames.current = 0;
     };
 
@@ -208,11 +241,22 @@ export default function IdentityCheck() {
                     )}
 
                     {status === "success" && (
-                        <div className="flex flex-col items-center space-y-4 animate-in zoom-in spin-in-12 duration-500">
-                            <div className="size-24 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                                <span className="material-symbols-outlined text-6xl">check_circle</span>
+                        <div className="flex flex-col items-center space-y-4 animate-in zoom-in spin-in-12 duration-500 w-full h-full relative">
+                            {snapshotDataUrl
+                                ? <img src={snapshotDataUrl} alt="Identity scan" className="w-full h-full object-cover rounded-3xl" />
+                                : <div className="flex flex-col items-center gap-4">
+                                    <div className="size-24 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                                        <span className="material-symbols-outlined text-6xl">check_circle</span>
+                                    </div>
+                                  </div>
+                            }
+                            {/* Verified badge overlay */}
+                            <div className="absolute bottom-3 left-3 right-3 bg-black/60 backdrop-blur-sm rounded-xl px-3 py-2 flex items-center justify-center gap-2">
+                                <span className="material-symbols-outlined text-primary text-base">check_circle</span>
+                                <span className="text-sm font-black text-primary uppercase tracking-widest">
+                                    {saving ? "Saving…" : "Verified & Saved"}
+                                </span>
                             </div>
-                            <span className="text-xl font-black text-primary uppercase tracking-widest">Verified</span>
                         </div>
                     )}
 
@@ -267,12 +311,17 @@ export default function IdentityCheck() {
                 )}
 
                 {status === "success" && (
-                    <button
-                        onClick={handleFinish}
-                        className="w-full py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black shadow-xl hover:scale-105 active:scale-95 transition-all uppercase tracking-widest"
-                    >
-                        Access Granted
-                    </button>
+                    <div className="space-y-3">
+                        <p className="text-center text-xs text-slate-400 font-semibold">
+                            Snapshot saved to <span className="text-primary">File Uploads</span>
+                        </p>
+                        <button
+                            onClick={handleFinish}
+                            className="w-full py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black shadow-xl hover:scale-105 active:scale-95 transition-all uppercase tracking-widest"
+                        >
+                            Access Granted
+                        </button>
+                    </div>
                 )}
 
                 <div className="flex items-center justify-center gap-2 text-slate-400">

@@ -186,8 +186,8 @@ export default function Alarm() {
               <span className="material-symbols-outlined text-5xl">face_6</span>
             </div>
             <h3 className="text-lg font-bold mb-2">Identity Check</h3>
-            <p className="text-xs opacity-60 leading-relaxed mb-6">Smile for the camera to prove you are conscious.</p>
-            <button onClick={() => navigate('/identity-check')} className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm shadow-lg shadow-primary/30 hover:shadow-primary/40 transition-all">Verify Me</button>
+            <p className="text-xs opacity-60 leading-relaxed mb-6">Scan your face with AI — verifies you're awake and <span className="font-bold">dismisses the alarm</span>.</p>
+            <button onClick={() => navigate('/identity-check')} className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm shadow-lg shadow-primary/30 hover:shadow-primary/40 transition-all">Scan My Face</button>
           </div>
         </div>
       </div>

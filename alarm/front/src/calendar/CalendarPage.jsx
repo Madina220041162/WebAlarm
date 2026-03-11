@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import CalendarHeader from "./CalendarHeader";
 import DayView from "./views/DayView";
 import WeekView from "./views/WeekView";
@@ -10,11 +10,20 @@ import { alarmAPI } from "../services/api";
 import { requestNotificationPermission } from "../utils/alarmSound";
 import io from "socket.io-client";
 import { useAuth } from "../auth/AuthContext";
+import { useNavigate } from "react-router-dom";
+import {
+  getRandomProofTarget,
+  saveActiveProofChallenge,
+  getProofVerificationResult,
+  clearProofVerificationResult,
+  clearActiveProofChallenge,
+} from "../utils/proofChallenge";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function CalendarPage() {
   const { canManageAlarms, isGuest } = useAuth();
+  const navigate = useNavigate();
   const [view, setView] = useState("month");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [alarms, setAlarms] = useState([]);
@@ -24,7 +33,39 @@ export default function CalendarPage() {
   const [editingAlarm, setEditingAlarm] = useState(null);
   const [guestMessage, setGuestMessage] = useState("");
   const [triggeredAlarm, setTriggeredAlarm] = useState(null);
+  const [proofChallenge, setProofChallenge] = useState(null);
+  const [proofVerified, setProofVerified] = useState(false);
   const socketRef = useRef(null);
+
+  const assignProofChallenge = useCallback((alarmData) => {
+    const challenge = {
+      alarmId: alarmData.id,
+      target: getRandomProofTarget(),
+      issuedAt: Date.now(),
+    };
+    setProofChallenge(challenge);
+    setProofVerified(false);
+    saveActiveProofChallenge(challenge);
+    clearProofVerificationResult();
+  }, []);
+
+  const refreshProofStatus = useCallback(() => {
+    if (!proofChallenge) {
+      setProofVerified(false);
+      return;
+    }
+
+    const result = getProofVerificationResult();
+    const isValid = Boolean(
+      result &&
+        result.passed &&
+        result.alarmId === proofChallenge.alarmId &&
+        result.target === proofChallenge.target &&
+        result.verifiedAt >= proofChallenge.issuedAt
+    );
+
+    setProofVerified(isValid);
+  }, [proofChallenge]);
 
   useEffect(() => {
     fetchAlarms();
@@ -49,6 +90,7 @@ export default function CalendarPage() {
       console.log("ALARM TRIGGERED EVENT:", data);
       console.log("Setting triggeredAlarm state:", data);
       setTriggeredAlarm(data);
+      assignProofChallenge(data);
       // Refresh alarms list
       setTimeout(() => fetchAlarms(), 500);
     });
@@ -64,7 +106,17 @@ export default function CalendarPage() {
     return () => {
       socketRef.current?.disconnect();
     };
-  }, []);
+  }, [assignProofChallenge]);
+
+  useEffect(() => {
+    refreshProofStatus();
+  }, [refreshProofStatus]);
+
+  useEffect(() => {
+    const onProofUpdate = () => refreshProofStatus();
+    window.addEventListener("proof-verification-updated", onProofUpdate);
+    return () => window.removeEventListener("proof-verification-updated", onProofUpdate);
+  }, [refreshProofStatus]);
 
   const fetchAlarms = async () => {
     try {
@@ -118,6 +170,11 @@ export default function CalendarPage() {
   };
 
   const handleDismissAlarm = async () => {
+    if (!proofVerified) {
+      setGuestMessage("Upload the requested proof before dismissing the alarm.");
+      return;
+    }
+
     if (triggeredAlarm) {
       try {
         await alarmAPI.delete(triggeredAlarm.id);
@@ -126,6 +183,10 @@ export default function CalendarPage() {
       }
     }
     setTriggeredAlarm(null);
+    setProofChallenge(null);
+    setProofVerified(false);
+    clearActiveProofChallenge();
+    clearProofVerificationResult();
     fetchAlarms();
   };
 
@@ -145,6 +206,10 @@ export default function CalendarPage() {
       }
     }
     setTriggeredAlarm(null);
+    setProofChallenge(null);
+    setProofVerified(false);
+    clearActiveProofChallenge();
+    clearProofVerificationResult();
     fetchAlarms();
   };
 
@@ -198,6 +263,9 @@ export default function CalendarPage() {
 
       <AlarmNotification
         alarm={triggeredAlarm}
+        proofChallenge={proofChallenge}
+        proofVerified={proofVerified}
+        onOpenProof={() => navigate("/files")}
         onDismiss={handleDismissAlarm}
         onSnooze={handleSnoozeAlarm}
       />

@@ -1,15 +1,29 @@
 import React, { useState, useEffect } from "react";
+import { classifyImageFile, doesPredictionMatchTarget } from "../utils/imageClassifier";
+import {
+  getActiveProofChallenge,
+  saveProofVerificationResult,
+  clearProofVerificationResult,
+} from "../utils/proofChallenge";
 
 const FileUpload = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(null);
+  const [activeChallenge, setActiveChallenge] = useState(null);
+  const [validationMessage, setValidationMessage] = useState("");
+  const [validationError, setValidationError] = useState("");
 
   const API_URL = import.meta.env.VITE_API_URL + "/api/files";
 
   useEffect(() => {
     fetchFiles();
+    setActiveChallenge(getActiveProofChallenge());
+
+    const onChallengeUpdate = () => setActiveChallenge(getActiveProofChallenge());
+    window.addEventListener("proof-challenge-updated", onChallengeUpdate);
+    return () => window.removeEventListener("proof-challenge-updated", onChallengeUpdate);
   }, []);
 
   const fetchFiles = async () => {
@@ -26,6 +40,9 @@ const FileUpload = () => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
+    setValidationMessage("");
+    setValidationError("");
+
     if (file) {
       setSelectedFile(file);
       if (file.type.startsWith("image/")) {
@@ -40,6 +57,47 @@ const FileUpload = () => {
 
   const handleUpload = async () => {
     if (!selectedFile) return;
+
+    setValidationMessage("");
+    setValidationError("");
+
+    if (activeChallenge) {
+      if (!selectedFile.type.startsWith("image/")) {
+        setValidationError("This challenge requires an image file.");
+        return;
+      }
+
+      try {
+        const predictions = await classifyImageFile(selectedFile);
+        const matched = doesPredictionMatchTarget(predictions, activeChallenge.target);
+
+        if (!matched) {
+          clearProofVerificationResult();
+          setValidationError(
+            `Proof rejected. Required object is '${activeChallenge.target}', but it was not detected.`
+          );
+          return;
+        }
+
+        saveProofVerificationResult({
+          passed: true,
+          alarmId: activeChallenge.alarmId,
+          target: activeChallenge.target,
+          verifiedAt: Date.now(),
+          fileName: selectedFile.name,
+          topPrediction: predictions[0]?.className || "unknown",
+        });
+
+        setValidationMessage(
+          `Proof accepted. Detected '${activeChallenge.target}'. You can dismiss the alarm now.`
+        );
+      } catch (error) {
+        clearProofVerificationResult();
+        setValidationError(`Could not validate image proof: ${error.message}`);
+        return;
+      }
+    }
+
     setUploading(true);
     const formData = new FormData();
     formData.append("file", selectedFile);
@@ -72,6 +130,27 @@ const FileUpload = () => {
 
   return (
     <div className="space-y-12 animate-in fade-in zoom-in duration-500 max-w-6xl pb-20">
+      {activeChallenge && (
+        <div className="glass-card p-6 rounded-xl border border-primary/20 bg-primary/5">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Active Alarm Proof Challenge</p>
+          <p className="text-lg font-black text-slate-900">
+            Upload an image that contains: <span className="text-primary uppercase">{activeChallenge.target}</span>
+          </p>
+          <p className="text-xs font-semibold text-slate-500 mt-2">
+            If the required object is not detected, alarm dismissal stays locked.
+          </p>
+        </div>
+      )}
+
+      {!activeChallenge && (
+        <div className="glass-card p-6 rounded-xl border border-slate-200 bg-slate-50/70">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Proof Status</p>
+          <p className="text-sm font-bold text-slate-700">
+            No active alarm challenge right now. When an alarm rings, this page will show the exact photo target you must upload.
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-12 gap-8">
         {/* Upload Zone */}
         <div className="col-span-12 lg:col-span-4">
@@ -108,6 +187,18 @@ const FileUpload = () => {
               <div className="mb-8 p-4 rounded-xl bg-white/40 border border-slate-100 text-left">
                 <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Payload Size</p>
                 <p className="text-sm font-bold text-slate-700">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+              </div>
+            )}
+
+            {validationMessage && (
+              <div className="mb-4 p-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm font-semibold text-left">
+                {validationMessage}
+              </div>
+            )}
+
+            {validationError && (
+              <div className="mb-4 p-3 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm font-semibold text-left">
+                {validationError}
               </div>
             )}
 

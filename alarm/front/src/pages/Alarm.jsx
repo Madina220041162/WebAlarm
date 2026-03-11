@@ -2,6 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import {
+  getRandomProofTarget,
+  saveActiveProofChallenge,
+  getActiveProofChallenge,
+} from '../utils/proofChallenge';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -11,6 +16,7 @@ export default function Alarm() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [newAlarm, setNewAlarm] = useState({ time: "", label: "" });
   const [isAdding, setIsAdding] = useState(false);
+  const [activeChallenge, setActiveChallenge] = useState(null);
   const socketRef = useRef(null);
   const navigate = useNavigate();
 
@@ -20,13 +26,29 @@ export default function Alarm() {
   }, []);
 
   useEffect(() => {
+    setActiveChallenge(getActiveProofChallenge());
+
     socketRef.current = io(API_URL);
     socketRef.current.on('alarmTriggered', (data) => {
       console.log('Alarm triggered:', data);
+      const challenge = {
+        alarmId: data.id,
+        target: getRandomProofTarget(),
+        issuedAt: Date.now(),
+      };
+      saveActiveProofChallenge(challenge);
+      setActiveChallenge(challenge);
       fetchAlarms();
     });
+
+    const onChallengeUpdate = () => setActiveChallenge(getActiveProofChallenge());
+    window.addEventListener('proof-challenge-updated', onChallengeUpdate);
+
     fetchAlarms();
-    return () => socketRef.current?.disconnect();
+    return () => {
+      window.removeEventListener('proof-challenge-updated', onChallengeUpdate);
+      socketRef.current?.disconnect();
+    };
   }, []);
 
   const fetchAlarms = async () => {
@@ -146,7 +168,16 @@ export default function Alarm() {
               <span className="material-symbols-outlined text-5xl">coffee_maker</span>
             </div>
             <h3 className="text-lg font-bold mb-2">Upload Proof</h3>
-            <p className="text-xs opacity-60 leading-relaxed mb-6">Photograph your coffee machine in active operation.</p>
+            <p className="text-xs opacity-60 leading-relaxed mb-2">
+              {activeChallenge
+                ? `Required now: upload a photo containing '${activeChallenge.target}'.`
+                : 'No active proof challenge yet. It appears when an alarm rings.'}
+            </p>
+            {activeChallenge && (
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-4">
+                Target: {activeChallenge.target}
+              </p>
+            )}
             <button onClick={() => navigate('/files')} className="w-full py-4 bg-blue-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transition-all">Open Camera</button>
           </div>
 

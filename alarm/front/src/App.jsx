@@ -12,6 +12,7 @@ import GamesHub from "./games/GamesHub";
 import Settings from "./pages/Settings";
 import IdentityCheck from "./pages/IdentityCheck";
 import Sidebar from "./components/Sidebar";
+import InteractiveWave from "./components/InteractiveWave";
 import "./App.css";
 
 function DashboardLayout({ children, title, subtitle }) {
@@ -52,7 +53,9 @@ function DashboardLayout({ children, title, subtitle }) {
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <InteractiveWave />
+      <Routes>
       {/* Public routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
@@ -131,6 +134,7 @@ export default function App() {
           </DashboardLayout>
         }
       />
-    </Routes >
+    </Routes>
+    </>
   );
 }

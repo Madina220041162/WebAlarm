@@ -266,6 +266,7 @@ export default function CalendarPage() {
         proofChallenge={proofChallenge}
         proofVerified={proofVerified}
         onOpenProof={() => navigate("/files")}
+        onScanVerified={() => setProofVerified(true)}
         onDismiss={handleDismissAlarm}
         onSnooze={handleSnoozeAlarm}
       />

@@ -1,5 +1,27 @@
 const Note = require('../models/Note');
 
+const ALLOWED_THEMES = new Set(['classic', 'night', 'sepia', 'mint']);
+const HEX_COLOR_REGEX = /^#[0-9A-Fa-f]{6}$/;
+
+function normalizeStyle(rawStyle = {}) {
+  const style = rawStyle || {};
+  const theme = ALLOWED_THEMES.has(style.theme) ? style.theme : 'classic';
+  const paperColor = HEX_COLOR_REGEX.test(style.paperColor || '') ? style.paperColor : '#ffffff';
+  const textColor = HEX_COLOR_REGEX.test(style.textColor || '') ? style.textColor : '#1e293b';
+
+  const parsedFontSize = Number(style.fontSize);
+  const fontSize = Number.isFinite(parsedFontSize)
+    ? Math.min(30, Math.max(12, Math.round(parsedFontSize)))
+    : 16;
+
+  return {
+    theme,
+    paperColor,
+    textColor,
+    fontSize,
+  };
+}
+
 // Get all notes
 exports.getAllNotes = async (req, res) => {
   try {
@@ -13,7 +35,7 @@ exports.getAllNotes = async (req, res) => {
 // Create a new note
 exports.createNote = async (req, res) => {
   try {
-    const { title, content, tags } = req.body;
+    const { title, content, tags, style } = req.body;
     if (!title || !content) {
       return res.status(400).json({ message: 'Title and content are required' });
     }
@@ -23,6 +45,7 @@ exports.createNote = async (req, res) => {
       title,
       content,
       tags: tags || [],
+      style: normalizeStyle(style),
     });
 
     await newNote.save();
@@ -48,7 +71,7 @@ exports.getNote = async (req, res) => {
 exports.updateNote = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, content, tags } = req.body;
+    const { title, content, tags, style } = req.body;
 
     const note = await Note.findById(id);
     if (!note) return res.status(404).json({ message: 'Note not found' });
@@ -56,6 +79,9 @@ exports.updateNote = async (req, res) => {
     note.title = title || note.title;
     note.content = content || note.content;
     note.tags = tags !== undefined ? tags : note.tags;
+    if (style !== undefined) {
+      note.style = normalizeStyle({ ...(note.style || {}), ...style });
+    }
     note.updatedAt = new Date();
 
     await note.save();

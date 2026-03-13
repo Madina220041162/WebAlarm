@@ -13,7 +13,15 @@ const checkDueAlarms = async () => {
       alarm.triggered = true;
       await alarm.save();
       // Emit event to all connected clients
-      if (_io) _io.emit('alarmTriggered', { id: alarm._id, time: alarm.time, label: alarm.label });
+      if (_io) {
+        _io.emit('alarmTriggered', {
+          id: alarm._id,
+          time: alarm.time,
+          label: alarm.label,
+          sound: alarm.sound || 'rooster',
+          sleeperType: alarm.sleeperType || 'dream-drifter',
+        });
+      }
     }
   } catch (err) {
     console.error('Alarm scheduler error:', err.message);

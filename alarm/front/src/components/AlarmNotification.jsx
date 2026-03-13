@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { createAlarmSound, showAlarmNotification } from "../utils/alarmSound";
+import { useNavigate, useLocation } from "react-router-dom";
+import { createAlarmSound } from "../utils/alarmSound";
 import * as blazeface from "@tensorflow-models/blazeface";
 import "@tensorflow/tfjs";
 
@@ -8,303 +9,209 @@ const SCAN_REQUIRED_FRAMES = 90;
 
 export default function AlarmNotification({
   alarm,
-  proofChallenge,
   proofVerified,
-  onOpenProof,
   onScanVerified,
   onDismiss,
-  onSnooze,
 }) {
-  const [isRinging, setIsRinging] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
   const alarmSoundRef = useRef(null);
-  const browserNotificationRef = useRef(null);
 
-  // ── Inline face scan state ──────────────────────────────────────────
-  const [showScanner, setShowScanner] = useState(false);
-  const [scanStatus, setScanStatus] = useState("idle"); // idle | scanning | success | error
+  // Mission States
+  const [activeMission, setActiveMission] = useState(null);
+  const [scanStatus, setScanStatus] = useState("idle");
   const [scanProgress, setScanProgress] = useState(0);
-  const [faceLive, setFaceLive] = useState(false);
+
+  // Scanner Refs
   const scanVideoRef = useRef(null);
-  const scanCanvasRef = useRef(null);
   const scanModelRef = useRef(null);
   const scanStreamRef = useRef(null);
   const scanRafRef = useRef(null);
   const scanFrames = useRef(0);
 
-  const stopScan = useCallback(() => {
-    if (scanRafRef.current) { cancelAnimationFrame(scanRafRef.current); scanRafRef.current = null; }
-    if (scanStreamRef.current) { scanStreamRef.current.getTracks().forEach(t => t.stop()); scanStreamRef.current = null; }
+  // 1. GLOBAL AUDIO CONTROL: The "Kill Switch"
+  useEffect(() => {
+    // If proof is verified (from Face, Game, or Vault Upload), KILL sound immediately
+    if (proofVerified) {
+      if (alarmSoundRef.current) {
+        console.log("ALARM STOPPED: Proof Verified via Mission.");
+        alarmSoundRef.current.stop();
+        alarmSoundRef.current = null;
+      }
+      return;
+    }
+
+    // Start sound if it's not already playing
+    if (alarm && !alarmSoundRef.current) {
+      alarmSoundRef.current = createAlarmSound(alarm.sound || "rooster");
+      alarmSoundRef.current.start();
+    }
+
+    // Cleanup when component unmounts
+    return () => {
+      if (alarmSoundRef.current) {
+        alarmSoundRef.current.stop();
+        alarmSoundRef.current = null;
+      }
+    };
+  }, [alarm, proofVerified]);
+
+  // 2. Inject CSS for scan animations
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.innerHTML = `
+      @keyframes scanLine { 0% { top: 0%; } 100% { top: 100%; } }
+      .mirror { transform: scaleX(-1); }
+      .glow-red { box-shadow: 0 0 30px rgba(220, 38, 38, 0.6); }
+    `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
   }, []);
 
-  // Stop camera when modal closes
-  useEffect(() => () => stopScan(), [stopScan]);
+  const stopScan = useCallback(() => {
+    if (scanRafRef.current) cancelAnimationFrame(scanRafRef.current);
+    if (scanStreamRef.current) {
+      scanStreamRef.current.getTracks().forEach((t) => t.stop());
+    }
+  }, []);
 
+  // Logic for the Biometric Face Scan
   const startScan = async () => {
     setScanStatus("scanning");
-    setScanProgress(0);
-    setFaceLive(false);
-    scanFrames.current = 0;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
       scanStreamRef.current = stream;
-      const video = scanVideoRef.current;
-      video.srcObject = stream;
-      await video.play();
+      if (scanVideoRef.current) {
+        scanVideoRef.current.srcObject = stream;
+        await scanVideoRef.current.play();
+      }
       if (!scanModelRef.current) scanModelRef.current = await blazeface.load();
 
       const detect = async () => {
-        if (!scanVideoRef.current || scanVideoRef.current.readyState < 2) {
-          scanRafRef.current = requestAnimationFrame(detect);
-          return;
-        }
+        if (!scanVideoRef.current) return;
         const preds = await scanModelRef.current.estimateFaces(scanVideoRef.current, false);
         const hasFace = preds.length > 0;
-        setFaceLive(hasFace);
+        
+        if (hasFace) scanFrames.current++;
+        else scanFrames.current = Math.max(0, scanFrames.current - 2);
 
-        // Draw box
-        const canvas = scanCanvasRef.current;
-        const vid = scanVideoRef.current;
-        if (canvas && vid) {
-          canvas.width = vid.videoWidth;
-          canvas.height = vid.videoHeight;
-          const ctx = canvas.getContext("2d");
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          preds.forEach(({ topLeft, bottomRight }) => {
-            const [x, y] = topLeft;
-            const [x2, y2] = bottomRight;
-            ctx.strokeStyle = "#53d22d";
-            ctx.lineWidth = 3;
-            ctx.shadowColor = "#53d22d";
-            ctx.shadowBlur = 10;
-            ctx.strokeRect(x, y, x2 - x, y2 - y);
-          });
-        }
-
-        if (hasFace) scanFrames.current = Math.min(scanFrames.current + 1, SCAN_REQUIRED_FRAMES);
-        else scanFrames.current = Math.max(scanFrames.current - 2, 0);
-
-        const p = Math.round((scanFrames.current / SCAN_REQUIRED_FRAMES) * 100);
-        setScanProgress(p);
+        const progress = Math.min(100, Math.round((scanFrames.current / SCAN_REQUIRED_FRAMES) * 100));
+        setScanProgress(progress);
 
         if (scanFrames.current >= SCAN_REQUIRED_FRAMES) {
           stopScan();
           setScanStatus("success");
-          onScanVerified();
+          onScanVerified(); // Triggers global proofVerified = true
+          onDismiss();      // Closes modal
           return;
         }
         scanRafRef.current = requestAnimationFrame(detect);
       };
       detect();
-    } catch (err) {
-      setScanStatus("error");
+    } catch (err) { 
+      setScanStatus("error"); 
     }
-  };
-
-  const cancelScan = () => {
-    stopScan();
-    setScanStatus("idle");
-    setScanProgress(0);
-    setShowScanner(false);
-  };
-
-  useEffect(() => {
-    if (!alarm) return;
-
-    // Start alarm sound with the selected sound type
-    if (isRinging) {
-      alarmSoundRef.current = createAlarmSound(alarm.sound || "rooster");
-      alarmSoundRef.current.start();
-
-      // Show browser notification
-      browserNotificationRef.current = showAlarmNotification(alarm);
-    }
-
-    return () => {
-      if (alarmSoundRef.current) {
-        alarmSoundRef.current.stop();
-      }
-      if (browserNotificationRef.current) {
-        browserNotificationRef.current.close();
-      }
-    };
-  }, [alarm, isRinging]);
-
-  const handleDismiss = () => {
-    if (!proofVerified) return;
-
-    setIsRinging(false);
-    if (alarmSoundRef.current) {
-      alarmSoundRef.current.stop();
-    }
-    if (browserNotificationRef.current) {
-      browserNotificationRef.current.close();
-    }
-    onDismiss();
-  };
-
-  const handleSnooze = () => {
-    setIsRinging(false);
-    if (alarmSoundRef.current) {
-      alarmSoundRef.current.stop();
-    }
-    if (browserNotificationRef.current) {
-      browserNotificationRef.current.close();
-    }
-    onSnooze();
   };
 
   if (!alarm) return null;
 
-  console.log("🔔 AlarmNotification rendering with alarm:", alarm);
+  // Logic to hide the main modal UI when the user is actually doing a mission
+  const isCurrentlyWorking = location.pathname === "/games" || location.pathname === "/files";
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="min-h-full w-full flex items-center justify-center p-4 sm:p-6">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8 max-h-[90vh] overflow-y-auto animate-in zoom-in duration-300 relative z-[9999]">
-        <div className="text-center mb-8">
-          <div className={`inline-flex items-center justify-center size-24 rounded-full mb-6 ${
-            isRinging ? "bg-danger animate-pulse" : "bg-primary"
-          }`}>
-            <span className="material-symbols-outlined text-6xl text-white">
-              {isRinging ? "notifications_active" : "notifications"}
-            </span>
-          </div>
-          
-          <h2 className="text-3xl font-black text-slate-900 mb-2">
-            {isRinging ? "⏰ ALARM!" : "Alarm Triggered"}
-          </h2>
-          
-          <p className="text-lg font-bold text-slate-600 mb-1">
-            {alarm.label || "Wake Up Battle"}
-          </p>
-          
-          <p className="text-sm text-slate-400 font-semibold">
-            {new Date(alarm.time).toLocaleString()}
-          </p>
-
-          {alarm.sleeperType && (
-            <div className="mt-3 inline-block px-3 py-1 rounded-full bg-slate-100 text-xs font-bold text-slate-600">
-              {alarm.sleeperType.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
-            </div>
-          )}
+    <div className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 ${isCurrentlyWorking && !proofVerified ? 'pointer-events-none' : 'bg-slate-950/95 backdrop-blur-2xl'}`}>
+      
+      {/* Mini-Indicator for "Mission Mode" */}
+      {isCurrentlyWorking && !proofVerified ? (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-6 py-2 rounded-full font-black animate-bounce shadow-xl flex items-center gap-2 pointer-events-auto">
+          <span className="material-symbols-outlined animate-spin">priority_high</span>
+          ALARM ACTIVE: COMPLETE MISSION
         </div>
-
-        <div className="space-y-3">
-          {proofChallenge && (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-left">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Required Proof</p>
-              <p className="font-bold text-slate-800">
-                Upload a clear photo containing: <span className="text-primary uppercase">{proofChallenge.target}</span>
-              </p>
-              <p className={`text-xs font-semibold mt-2 ${proofVerified ? "text-emerald-600" : "text-amber-600"}`}>
-                {proofVerified ? "Proof accepted. You can dismiss the alarm." : "Proof not verified yet. Dismiss is locked."}
-              </p>
+      ) : (
+        <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-md p-8 relative border-4 border-slate-100 overflow-hidden pointer-events-auto">
+          <div className="text-center mb-8">
+            <div className={`inline-flex items-center justify-center size-24 rounded-full mb-4 shadow-2xl transition-all duration-700 ${
+              proofVerified ? "bg-emerald-500 scale-110 shadow-emerald-200" : "bg-red-600 animate-pulse glow-red"
+            }`}>
+              <span className="material-symbols-outlined text-5xl text-white">
+                {proofVerified ? "verified_user" : "emergency_home"}
+              </span>
             </div>
-          )}
+            <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic">
+              {proofVerified ? "Mission Cleared" : "Mission Pending"}
+            </h2>
+          </div>
 
-          {/* ── Option 1: Upload proof ── */}
-          <button
-            onClick={onOpenProof}
-            className="w-full py-4 px-6 rounded-xl border-2 border-primary/20 text-primary font-bold text-lg hover:bg-primary/5 transition-all"
-          >
-            Open Upload Proof
-          </button>
+          <div className="space-y-4">
+            {!proofVerified && activeMission !== 'face' && (
+              <div className="grid gap-3">
+                {/* 1. Games Mission */}
+                <button 
+                  onClick={() => navigate("/games")} 
+                  className="w-full py-5 px-6 rounded-2xl bg-orange-500 text-white font-black text-lg hover:bg-orange-600 transition-all flex items-center justify-between group"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-3xl">videogame_asset</span>
+                    <span>NEURAL CHALLENGE</span>
+                  </div>
+                  <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
+                </button>
 
-          {/* ── Option 2: Face scan ── */}
-          {!showScanner ? (
-            <button
-              onClick={() => { setShowScanner(true); startScan(); }}
-              className="w-full py-4 px-6 rounded-xl border-2 border-purple-200 text-purple-600 font-bold text-lg hover:bg-purple-50 transition-all flex items-center justify-center gap-2"
-            >
-              <span className="material-symbols-outlined text-xl">face_unlock</span>
-              Scan My Face
-            </button>
-          ) : (
-            <div className="rounded-2xl border-2 border-purple-200 overflow-hidden">
-              {/* Camera viewport */}
-              <div className="relative bg-slate-900" style={{ height: 200 }}>
-                <video
-                  ref={scanVideoRef}
-                  className="absolute inset-0 w-full h-full object-cover"
-                  muted playsInline
-                  style={{ transform: "scaleX(-1)", display: scanStatus === "scanning" ? "block" : "none" }}
-                />
-                <canvas
-                  ref={scanCanvasRef}
-                  className="absolute inset-0 w-full h-full pointer-events-none"
-                  style={{ transform: "scaleX(-1)", display: scanStatus === "scanning" ? "block" : "none" }}
-                />
-                {/* Scan line animation */}
-                {scanStatus === "scanning" && (
-                  <div
-                    className="absolute left-0 w-full h-[3px] bg-primary z-20 pointer-events-none"
-                    style={{ boxShadow: "0 0 12px #53d22d", animation: "scanLine 2s linear infinite" }}
-                  />
-                )}
-                {scanStatus === "success" && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/80 gap-2">
-                    <span className="material-symbols-outlined text-5xl text-primary">check_circle</span>
-                    <span className="text-sm font-black text-primary uppercase tracking-widest">Identity Verified!</span>
+                {/* 2. Object Verification Mission */}
+                <button 
+                  onClick={() => navigate("/files")} 
+                  className="w-full py-5 px-6 rounded-2xl bg-indigo-600 text-white font-black text-lg hover:bg-indigo-700 transition-all flex items-center justify-between group"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-3xl">inventory_2</span>
+                    <span>VAULT STORAGE</span>
                   </div>
-                )}
-                {scanStatus === "error" && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/80 gap-2">
-                    <span className="material-symbols-outlined text-4xl text-red-400">videocam_off</span>
-                    <span className="text-xs font-bold text-red-400">Camera unavailable</span>
+                  <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
+                </button>
+
+                {/* 3. Face Scan Mission */}
+                <button 
+                  onClick={() => { setActiveMission('face'); startScan(); }} 
+                  className="w-full py-5 px-6 rounded-2xl border-4 border-slate-900 text-slate-900 font-black text-lg hover:bg-slate-900 hover:text-white transition-all flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-3xl">face</span>
+                    <span>BIOMETRIC SCAN</span>
                   </div>
-                )}
+                  <span className="material-symbols-outlined">scan</span>
+                </button>
               </div>
-              {/* Progress bar */}
-              {scanStatus === "scanning" && (
-                <div className="px-4 pt-3 pb-1">
-                  <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-1">
-                    <span className={faceLive ? "text-primary" : "text-amber-500"}>
-                      {faceLive ? "Face detected — hold still" : "No face detected"}
-                    </span>
-                    <span className="text-slate-500">{scanProgress}%</span>
-                  </div>
-                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full transition-all duration-200 rounded-full ${
-                        faceLive ? "bg-primary" : "bg-amber-400"
-                      }`}
-                      style={{ width: `${scanProgress}%` }}
-                    />
-                  </div>
-                </div>
-              )}
+            )}
+
+            {/* Face Scan UI */}
+            {!proofVerified && activeMission === 'face' && (
+               <div className="rounded-3xl border-4 border-slate-900 overflow-hidden bg-black relative">
+                 <video ref={scanVideoRef} className="w-full h-64 object-cover mirror" muted playsInline />
+                 <div className="absolute bottom-0 w-full p-4 bg-slate-900/90">
+                    <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+                       <div className="h-full bg-cyan-400" style={{ width: `${scanProgress}%` }} />
+                    </div>
+                 </div>
+                 <button onClick={() => { stopScan(); setActiveMission(null); }} className="absolute top-4 right-4 text-white">
+                   <span className="material-symbols-outlined">close</span>
+                 </button>
+               </div>
+            )}
+
+            <div className="pt-6">
               <button
-                onClick={cancelScan}
-                className="w-full py-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                onClick={onDismiss}
+                disabled={!proofVerified}
+                className={`w-full py-6 rounded-[2rem] font-black text-2xl transition-all uppercase flex items-center justify-center gap-3 ${
+                  proofVerified ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-300"
+                }`}
               >
-                {scanStatus === "success" ? "Close Scanner" : "Cancel"}
+                {proofVerified ? "Silence Alarm" : "Locked"}
               </button>
             </div>
-          )}
-
-          <button
-            onClick={handleDismiss}
-            disabled={!proofVerified}
-            className="w-full py-4 px-6 rounded-xl bg-primary text-white font-bold text-lg shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Dismiss Alarm
-          </button>
-          
-          <button
-            onClick={handleSnooze}
-            className="w-full py-4 px-6 rounded-xl border-2 border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-all"
-          >
-            Snooze 5 Minutes
-          </button>
+          </div>
         </div>
-
-        <div className="mt-6 text-center">
-          <p className="text-xs text-slate-400 font-semibold uppercase tracking-widest">
-            Complete challenge to stop alarm
-          </p>
-        </div>
-      </div>
-    </div>
+      )}
     </div>,
     document.body
   );

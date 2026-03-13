@@ -7,23 +7,25 @@
 
 @layer base {
   :root {
+    /* Light Mode Variables */
     --primary: #6366f1;
     --primary-hover: #4f46e5;
     --secondary: #ec4899;
     --danger: #ef4444;
     --success: #10b981;
-    --background: #f0f4ff;
+    --background: #f8faff; /* Bright, clean blue-tinted white */
     --foreground: #0f172a;
     --card: #ffffff;
     --border: #dde3f5;
     --muted: #64748b;
   }
 
+  /* The .dark class is applied to the <html> tag via AuthContext */
   .dark {
     --primary: #818cf8;
     --primary-hover: #6366f1;
     --secondary: #f472b6;
-    --background: #020617;
+    --background: #020617; /* Deep Midnight Blue */
     --foreground: #f8fafc;
     --card: #0f172a;
     --border: #1e293b;
@@ -33,20 +35,29 @@
   body {
     @apply text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-500 antialiased;
     font-family: 'Plus Jakarta Sans', sans-serif;
-    background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.12), transparent 500px),
-                radial-gradient(circle at bottom left, rgba(99, 102, 241, 0.08), transparent 500px),
-                var(--background);
+    
+    /* Default Light Mode Background */
+    background-color: var(--background);
+    background-image: 
+      radial-gradient(circle at top right, rgba(99, 102, 241, 0.1), transparent 500px),
+      radial-gradient(circle at bottom left, rgba(99, 102, 241, 0.05), transparent 500px);
     background-attachment: fixed;
   }
 
+  /* Explicit override when .dark class is active on the parent */
   .dark body {
-    background: radial-gradient(circle at top right, rgba(129, 140, 248, 0.07), transparent 600px),
-                radial-gradient(circle at bottom left, rgba(244, 114, 182, 0.07), transparent 600px),
-                #020617;
+    background-color: var(--background);
+    background-image: 
+      radial-gradient(circle at top right, rgba(129, 140, 248, 0.07), transparent 600px),
+      radial-gradient(circle at bottom left, rgba(244, 114, 182, 0.07), transparent 600px);
   }
 }
 
 @layer components {
+  /* Fixed Glass Card: 
+     In Light mode it is bright white/80. 
+     In Dark mode it becomes dark slate/40.
+  */
   .glass-card {
     @apply bg-white/80 dark:bg-slate-900/40 backdrop-blur-2xl border border-slate-200/60 dark:border-white/10 
            shadow-[0_8px_32px_0_rgba(99,102,241,0.08)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]
@@ -72,7 +83,7 @@
     @apply w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200 dark:bg-slate-900/50 dark:border-slate-800 
            focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 dark:focus:border-indigo-400 
            focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-semibold 
-           placeholder:text-slate-400 dark:placeholder:text-slate-600;
+           placeholder:text-slate-400 dark:placeholder:text-slate-600 dark:text-white;
   }
 
   .clock-shadow {
@@ -80,6 +91,7 @@
   }
 }
 
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -89,6 +101,6 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.1);
+  @apply bg-slate-300 dark:bg-slate-700;
   border-radius: 10px;
 }

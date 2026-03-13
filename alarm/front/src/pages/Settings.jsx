@@ -3,10 +3,13 @@ import { useAuth } from "../auth/AuthContext";
 import { apiCall } from "../services/api";
 
 export default function Settings() {
+    // Correctly destructuring from our fixed AuthContext
     const {
-        user, updateUser,
-        theme, toggleTheme,
-        explosionMode, toggleExplosionMode
+        user,
+        theme,
+        toggleTheme,
+        explosionMode,
+        setExplosionMode // Use the state setter directly from context
     } = useAuth();
 
     const [username, setUsername] = useState(user?.username || "");
@@ -35,9 +38,12 @@ export default function Settings() {
                 { username, email }
             );
 
+            // Sync with LocalStorage and State so the header updates
             const updatedUser = { ...user, ...res.user };
-            updateUser(updatedUser);
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            
             setMessage({ type: "success", text: "Profile updated successfully!" });
+            // Optional: You could add a setUser function to Context to refresh the whole app
         } catch (error) {
             setMessage({
                 type: "error",
@@ -77,13 +83,14 @@ export default function Settings() {
     };
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
+        <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12 px-4">
             {message.text && (
                 <div
-                    className={`px-6 py-4 rounded-2xl font-bold flex items-center gap-3 animate-in zoom-in-95 duration-300 ${message.type === "success"
+                    className={`px-6 py-4 rounded-2xl font-bold flex items-center gap-3 animate-in zoom-in-95 duration-300 ${
+                        message.type === "success"
                         ? "bg-primary/20 text-primary border border-primary/20"
                         : "bg-danger/20 text-danger border border-danger/20"
-                        }`}
+                    }`}
                 >
                     <span className="material-symbols-outlined">
                         {message.type === "success" ? "check_circle" : "error"}
@@ -164,7 +171,6 @@ export default function Settings() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="w-full px-5 py-4 rounded-2xl bg-white border border-slate-200 dark:bg-slate-800 dark:border-slate-700 focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all font-semibold text-slate-900 dark:text-white"
                                 placeholder="••••••••"
-                                required
                                 minLength={6}
                             />
                         </div>
@@ -178,7 +184,6 @@ export default function Settings() {
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 className="w-full px-5 py-4 rounded-2xl bg-white border border-slate-200 dark:bg-slate-800 dark:border-slate-700 focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all font-semibold text-slate-900 dark:text-white"
                                 placeholder="••••••••"
-                                required
                                 minLength={6}
                             />
                         </div>
@@ -206,18 +211,21 @@ export default function Settings() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Explosion Mode Toggle */}
                     <div className="p-6 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
                         <div>
                             <p className="font-bold">Explosion Mode</p>
                             <p className="text-xs opacity-60">Maximum alarm volume on start</p>
                         </div>
                         <button
-                            onClick={toggleExplosionMode}
+                            onClick={() => setExplosionMode(!explosionMode)}
                             className={`w-12 h-6 rounded-full relative transition-all duration-300 ${explosionMode ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-700'}`}
                         >
                             <div className={`absolute top-1 size-4 bg-white rounded-full shadow-sm transition-all duration-300 ${explosionMode ? 'right-1' : 'left-1'}`}></div>
                         </button>
                     </div>
+
+                    {/* Dark Theme Toggle */}
                     <div className="p-6 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
                         <div>
                             <p className="font-bold">Dark Theme</p>

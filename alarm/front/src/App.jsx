@@ -96,6 +96,15 @@ const handleMissionSuccess = () => {
         />
 
         <Route
+          path="/notes"
+          element={
+            <DashboardLayout title="Penalty" subtitle="Notes">
+              <Notes />
+            </DashboardLayout>
+          }
+        />
+
+        <Route
           path="/files"
           element={
             <DashboardLayout title="Vault" subtitle="Storage">

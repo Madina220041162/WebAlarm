@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
-import { createAlarmSound } from "../utils/alarmSound";
 import * as blazeface from "@tensorflow-models/blazeface";
 import "@tensorflow/tfjs";
 
@@ -15,7 +14,6 @@ export default function AlarmNotification({
 }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const alarmSoundRef = useRef(null);
 
   // Mission States
   const [activeMission, setActiveMission] = useState(null);
@@ -29,34 +27,7 @@ export default function AlarmNotification({
   const scanRafRef = useRef(null);
   const scanFrames = useRef(0);
 
-  // 1. GLOBAL AUDIO CONTROL: The "Kill Switch"
-  useEffect(() => {
-    // If proof is verified (from Face, Game, or Vault Upload), KILL sound immediately
-    if (proofVerified) {
-      if (alarmSoundRef.current) {
-        console.log("ALARM STOPPED: Proof Verified via Mission.");
-        alarmSoundRef.current.stop();
-        alarmSoundRef.current = null;
-      }
-      return;
-    }
-
-    // Start sound if it's not already playing
-    if (alarm && !alarmSoundRef.current) {
-      alarmSoundRef.current = createAlarmSound(alarm.sound || "rooster");
-      alarmSoundRef.current.start();
-    }
-
-    // Cleanup when component unmounts
-    return () => {
-      if (alarmSoundRef.current) {
-        alarmSoundRef.current.stop();
-        alarmSoundRef.current = null;
-      }
-    };
-  }, [alarm, proofVerified]);
-
-  // 2. Inject CSS for scan animations
+  // Inject CSS for scan animations
   useEffect(() => {
     const style = document.createElement("style");
     style.innerHTML = `

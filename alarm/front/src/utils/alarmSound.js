@@ -25,29 +25,11 @@ export function createAlarmSound(type = "rooster") {
   audio.volume = 0.7;
   audio.loop = true;
 
-  // We keep track of these specifically to kill them later
-  let oscillator = null;
-  let gainNode = null;
-
   function start() {
     if (context.state === 'suspended') context.resume();
 
     audio.play().catch(err => {
-      console.warn("MP3 Blocked - Starting Beep Oscillator");
-      
-      // Stop any existing oscillator first to prevent doubling
-      if (oscillator) return; 
-
-      oscillator = context.createOscillator();
-      gainNode = context.createGain();
-      
-      oscillator.type = "square";
-      oscillator.frequency.setValueAtTime(600, context.currentTime);
-      gainNode.gain.setValueAtTime(0.2, context.currentTime);
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(context.destination);
-      oscillator.start();
+      console.warn("Alarm sound playback failed. No fallback beep will be started.", err?.message || err);
     });
   }
 
@@ -57,21 +39,6 @@ export function createAlarmSound(type = "rooster") {
       audio.pause();
       audio.src = ""; // Force browser to dump the audio stream
       audio.load();
-    }
-
-    // 2. KILL THE BEEP (The Oscillator)
-    // In your video, this is what stayed playing!
-    if (oscillator) {
-      try {
-        oscillator.stop(); 
-        oscillator.disconnect(); // This "pulls the plug"
-        if (gainNode) gainNode.disconnect();
-      } catch (e) {
-        // Already stopped
-      } finally {
-        oscillator = null;
-        gainNode = null;
-      }
     }
     console.log("ALARM TERMINATED SUCCESSFULLY");
   }

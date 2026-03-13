@@ -29,6 +29,7 @@ export default function CalendarPage() {
   const [view, setView] = useState("month");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [alarms, setAlarms] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -124,6 +125,18 @@ export default function CalendarPage() {
     }
   };
 
+  const handleClearPastAlarms = async () => {
+    if (!window.confirm("Delete all past alarms from history?")) return;
+
+    try {
+      await alarmAPI.clearPast();
+      fetchAlarms();
+    } catch (error) {
+      console.error("Error clearing past alarms:", error);
+      alert("Could not clear history. Please try again.");
+    }
+  };
+
   const handleDateClick = (date, time = null) => {
     setEditingAlarm(null);
     setSelectedDate(date);
@@ -211,9 +224,35 @@ export default function CalendarPage() {
       </div>
     );
 
+  const now = new Date();
+  const upcomingAlarms = alarms.filter((a) => new Date(a.time) >= now);
+  const pastAlarms = alarms.filter((a) => new Date(a.time) < now);
+  const displayedAlarms = showHistory ? alarms : upcomingAlarms;
+
+  const manageableAlarms = [...displayedAlarms].sort(
+    (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime()
+  );
+
   return (
     <div className="animate-in fade-in zoom-in duration-500 pb-20">
       <div className="glass-card rounded-xl p-8 min-h-[600px] flex flex-col">
+
+        <div className="mb-5 flex flex-wrap items-center justify-end gap-2">
+          <button
+            onClick={() => setShowHistory((prev) => !prev)}
+            className="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-black uppercase tracking-wider"
+          >
+            {showHistory ? "Hide History" : "Show History"}
+          </button>
+
+          <button
+            onClick={handleClearPastAlarms}
+            disabled={pastAlarms.length === 0}
+            className="px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-black uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Clear Past ({pastAlarms.length})
+          </button>
+        </div>
 
         <CalendarHeader
           view={view}
@@ -229,7 +268,7 @@ export default function CalendarPage() {
           {view === "day" && (
             <DayView
               date={currentDate}
-              alarms={alarms}
+              alarms={displayedAlarms}
               onTimeSlotClick={handleDateClick}
             />
           )}
@@ -237,7 +276,7 @@ export default function CalendarPage() {
           {view === "week" && (
             <WeekView
               date={currentDate}
-              alarms={alarms}
+              alarms={displayedAlarms}
               onTimeSlotClick={handleDateClick}
             />
           )}
@@ -245,14 +284,14 @@ export default function CalendarPage() {
           {view === "year" && (
             <YearView
               date={currentDate}
-              alarms={alarms}
+              alarms={displayedAlarms}
             />
           )}
 
           {view === "month" && (
             <MonthView
               date={currentDate}
-              alarms={alarms}
+              alarms={displayedAlarms}
               onDateClick={handleDateClick}
             />
           )}
@@ -271,7 +310,7 @@ export default function CalendarPage() {
               Upcoming
             </p>
             <p className="font-bold text-slate-800">
-              {alarms.filter((a) => new Date(a.time) > new Date()).length} Battles Scheduled
+              {upcomingAlarms.length} Battles Scheduled
             </p>
           </div>
         </div>
@@ -304,6 +343,63 @@ export default function CalendarPage() {
             <p className="font-bold">Schedule New Battle</p>
           </div>
         </div>
+      </div>
+
+      <div className="mt-8 glass-card p-6 rounded-xl">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-sm font-black uppercase tracking-wider text-slate-500">
+            Alarm Manager ({manageableAlarms.length})
+          </h3>
+          <p className="text-xs font-bold text-slate-400">
+            {showHistory ? "Showing all alarms" : "Showing upcoming alarms"}
+          </p>
+        </div>
+
+        {manageableAlarms.length === 0 ? (
+          <p className="text-sm font-semibold text-slate-400">No alarms to manage in this view.</p>
+        ) : (
+          <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+            {manageableAlarms.map((alarm) => {
+              const isPast = new Date(alarm.time) < now;
+              return (
+                <div
+                  key={alarm._id || alarm.id}
+                  className="flex items-center justify-between rounded-xl border border-slate-200 bg-white/70 p-3"
+                >
+                  <div>
+                    <p className="font-black text-slate-800 text-sm">
+                      {new Date(alarm.time).toLocaleString([], {
+                        year: "numeric",
+                        month: "short",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                    <p className="text-xs font-semibold text-slate-500">
+                      {alarm.label || "Alarm"} {isPast ? "• Past" : "• Upcoming"}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleEditAlarm(alarm)}
+                      className="px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-bold"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteAlarm(alarm._id || alarm.id)}
+                      className="px-3 py-2 rounded-lg bg-red-600 text-white text-xs font-bold"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <AlarmModal

@@ -30,6 +30,37 @@ exports.createAlarm = async (req, res) => {
   }
 };
 
+// Update an alarm
+exports.updateAlarm = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { time, label, enabled, sound, sleeperType } = req.body;
+
+    const alarm = await Alarm.findById(id);
+    if (!alarm) return res.status(404).json({ message: 'Alarm not found' });
+
+    if (time) {
+      const parsedTime = new Date(time);
+      if (Number.isNaN(parsedTime.getTime())) {
+        return res.status(400).json({ message: 'Invalid time value' });
+      }
+      alarm.time = parsedTime;
+      // Re-arm if time changes
+      alarm.triggered = false;
+    }
+
+    if (label !== undefined) alarm.label = label || 'Alarm Battle';
+    if (enabled !== undefined) alarm.enabled = Boolean(enabled);
+    if (sound !== undefined) alarm.sound = sound;
+    if (sleeperType !== undefined) alarm.sleeperType = sleeperType;
+
+    await alarm.save();
+    res.status(200).json({ message: 'Alarm updated', alarm });
+  } catch (error) {
+    res.status(500).json({ message: 'Update error', error: error.message });
+  }
+};
+
 // Toggle alarm enabled/disabled
 exports.toggleAlarm = async (req, res) => {
   try {
@@ -54,6 +85,17 @@ exports.deleteAlarm = async (req, res) => {
     res.status(200).json({ message: 'Alarm deleted' });
   } catch (error) {
     res.status(500).json({ message: 'Delete error', error: error.message });
+  }
+};
+
+// Delete all alarms in the past (history cleanup)
+exports.deletePastAlarms = async (req, res) => {
+  try {
+    const now = new Date();
+    const result = await Alarm.deleteMany({ time: { $lt: now } });
+    res.status(200).json({ message: 'Past alarms deleted', deletedCount: result.deletedCount || 0 });
+  } catch (error) {
+    res.status(500).json({ message: 'History cleanup error', error: error.message });
   }
 };
 

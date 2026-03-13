@@ -55,6 +55,7 @@ export const alarmAPI = {
   create: (data) => apiCall("/api/alarms", "POST", data),
   update: (id, data) => apiCall(`/api/alarms/${id}`, "PUT", data),
   delete: (id) => apiCall(`/api/alarms/${id}`, "DELETE"),
+  clearPast: () => apiCall("/api/alarms/history/past", "DELETE"),
   toggle: (id) => apiCall(`/api/alarms/${id}/toggle`, "POST"),
   
   /**

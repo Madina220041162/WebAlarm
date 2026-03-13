@@ -27,23 +27,33 @@ export default function CalendarHeader({
 
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+
+      {/* LEFT SIDE */}
       <div className="flex items-center gap-6">
-        <h2 className="text-2xl font-black text-slate-900 tracking-tight">{monthYear}</h2>
+
+        {/* MONTH NAME */}
+        <h2 className="text-3xl font-extrabold text-green-700 tracking-tight">
+          {monthYear}
+        </h2>
+
+        {/* NAVIGATION BUTTONS */}
         <div className="flex gap-2">
           <button
-            className="size-10 rounded-xl glass-pill flex items-center justify-center text-slate-400 hover:text-primary transition-all"
+            className="size-10 rounded-xl glass-pill flex items-center justify-center text-gray-500 hover:text-indigo-500 transition-all"
             onClick={goPrev}
           >
             <span className="material-symbols-outlined">chevron_left</span>
           </button>
+
           <button
-            className="size-10 rounded-xl glass-pill flex items-center justify-center text-slate-400 hover:text-primary transition-all"
+            className="size-10 rounded-xl glass-pill flex items-center justify-center text-gray-500 hover:text-indigo-500 transition-all"
             onClick={goNext}
           >
             <span className="material-symbols-outlined">chevron_right</span>
           </button>
+
           <button
-            className="px-4 py-2 rounded-xl glass-pill text-xs font-black uppercase tracking-widest text-slate-500 hover:text-primary"
+            className="px-4 py-2 rounded-xl glass-pill text-xs font-black uppercase tracking-widest text-gray-600 hover:text-indigo-500 transition"
             onClick={goToday}
           >
             Today
@@ -51,19 +61,23 @@ export default function CalendarHeader({
         </div>
       </div>
 
-      <div className="flex p-1.5 bg-slate-100/50 rounded-2xl">
+      {/* VIEW SWITCH */}
+      <div className="flex p-1.5 bg-gray-200/70 rounded-2xl">
+
         {["day", "week", "month", "year"].map((v) => (
           <button
             key={v}
-            className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${view === v
-                ? "bg-white text-primary shadow-sm"
-                : "text-slate-400 hover:text-slate-600"
-              }`}
+            className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+              view === v
+                ? "bg-white text-indigo-600 shadow-sm"
+                : "text-gray-500 hover:text-gray-800"
+            }`}
             onClick={() => setView(v)}
           >
             {v}
           </button>
         ))}
+
       </div>
     </div>
   );

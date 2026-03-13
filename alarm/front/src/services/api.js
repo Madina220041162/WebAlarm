@@ -1,5 +1,4 @@
-
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export const apiCall = async (endpoint, method = "GET", body = null) => {
   const token = localStorage.getItem("authToken");
@@ -22,25 +21,28 @@ export const apiCall = async (endpoint, method = "GET", body = null) => {
   try {
     const response = await fetch(`${API_URL}${endpoint}`, options);
 
+    // Handle empty responses to prevent "Unexpected end of JSON"
+    const text = await response.text();
+    const data = text ? JSON.parse(text) : {};
+
     if (!response.ok) {
       if (response.status === 401) {
-        // Token expired or invalid
         localStorage.removeItem("authToken");
         localStorage.removeItem("user");
         window.location.href = "/login";
       }
-      const error = await response.json();
-      throw new Error(error.message || `HTTP ${response.status}`);
+      throw new Error(data.message || `HTTP ${response.status}`);
     }
 
-    return await response.json();
+    return data;
   } catch (error) {
     console.error("API Error:", error);
     throw error;
   }
 };
 
-// Specific API calls
+// --- Specific API Modules ---
+
 export const notesAPI = {
   getAll: () => apiCall("/api/notes"),
   create: (data) => apiCall("/api/notes", "POST", data),
@@ -54,6 +56,17 @@ export const alarmAPI = {
   update: (id, data) => apiCall(`/api/alarms/${id}`, "PUT", data),
   delete: (id) => apiCall(`/api/alarms/${id}`, "DELETE"),
   toggle: (id) => apiCall(`/api/alarms/${id}/toggle`, "POST"),
+  
+  /**
+   * MISSION CRITICAL: Dismissal
+   * This is the call that stops the alarm after a game/scan
+   */
+  dismiss: (alarmId, challengeType) => 
+    apiCall("/api/alarms/dismiss", "POST", { 
+      alarmId, 
+      challengeType, 
+      success: true 
+    }),
 };
 
 export const filesAPI = {
@@ -62,13 +75,18 @@ export const filesAPI = {
     const formData = new FormData();
     formData.append("file", file);
     const token = localStorage.getItem("authToken");
+    
     return fetch(`${API_URL}/api/files`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
       },
       body: formData,
-    }).then((res) => res.json());
+    }).then(async (res) => {
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Upload failed");
+      return data;
+    });
   },
   delete: (id) => apiCall(`/api/files/${id}`, "DELETE"),
 };

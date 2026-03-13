@@ -1,135 +1,94 @@
-// Alarm sound generator - supports real audio files with fallback to Web Audio API
-export function createAlarmSound(soundType = "rooster") {
-  let audio = null;
-  let isPlaying = false;
-  let intervalId = null;
+let audioContext = null;
 
-  // Map sound types to audio file paths
+function getContext() {
+  if (!audioContext) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    audioContext = new AudioContext();
+  }
+  return audioContext;
+}
+
+export function createAlarmSound(type = "rooster") {
+  const context = getContext();
+  const normalizedType = type.toLowerCase().replace(/\s+/g, '-');
+
   const soundFiles = {
     "rooster": "/sounds/rooster.mp3",
     "heavy-metal": "/sounds/heavy-metal.mp3",
     "military-trumpet": "/sounds/military-trumpet.mp3",
     "classic-clock": "/sounds/classic-clock.mp3",
-    "electronic-beep": "/sounds/electronic-beep.mp3",
+    "electronic-beep": "/sounds/electronic-beep.mp3"
   };
 
-  // Try to use real audio file first
-  const soundPath = soundFiles[soundType];
-  
-  function start() {
-    if (isPlaying) return;
-    isPlaying = true;
-    console.log("Playing alarm sound:", soundType);
+  const audioPath = soundFiles[normalizedType] || soundFiles["rooster"];
+  let audio = new Audio(audioPath);
+  audio.volume = 0.7;
+  audio.loop = true;
 
-    // Try to load and play real audio file
-    audio = new Audio(soundPath);
-    audio.loop = true;
-    audio.volume = 0.7;
-    
-    audio.play().catch((error) => {
-      console.warn("Could not play audio file, using fallback sound:", error);
-      // Fallback to Web Audio API if file not found
-      useFallbackSound();
+  // We keep track of these specifically to kill them later
+  let oscillator = null;
+  let gainNode = null;
+
+  function start() {
+    if (context.state === 'suspended') context.resume();
+
+    audio.play().catch(err => {
+      console.warn("MP3 Blocked - Starting Beep Oscillator");
+      
+      // Stop any existing oscillator first to prevent doubling
+      if (oscillator) return; 
+
+      oscillator = context.createOscillator();
+      gainNode = context.createGain();
+      
+      oscillator.type = "square";
+      oscillator.frequency.setValueAtTime(600, context.currentTime);
+      gainNode.gain.setValueAtTime(0.2, context.currentTime);
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(context.destination);
+      oscillator.start();
     });
   }
 
   function stop() {
-    isPlaying = false;
+    // 1. KILL THE MP3 IMMEDIATELY
     if (audio) {
       audio.pause();
-      audio.currentTime = 0;
-      audio = null;
-    }
-    if (intervalId) {
-      clearInterval(intervalId);
-      intervalId = null;
-    }
-  }
-
-  // Fallback to Web Audio API generated sounds
-  function useFallbackSound() {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    
-    const soundPatterns = {
-      "rooster": { freq1: 800, freq2: 1000, duration: 0.5, interval: 1000 },
-      "heavy-metal": { freq1: 200, freq2: 400, duration: 0.8, interval: 800 },
-      "military-trumpet": { freq1: 600, freq2: 900, duration: 0.6, interval: 900 },
-      "classic-clock": { freq1: 800, freq2: 800, duration: 0.3, interval: 1000 },
-      "electronic-beep": { freq1: 1200, freq2: 1200, duration: 0.2, interval: 500 },
-    };
-
-    const pattern = soundPatterns[soundType] || soundPatterns["rooster"];
-
-    function playBeep() {
-      const oscillator1 = audioContext.createOscillator();
-      const oscillator2 = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-
-      oscillator1.connect(gainNode);
-      oscillator2.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-
-      oscillator1.frequency.value = pattern.freq1;
-      oscillator2.frequency.value = pattern.freq2;
-      oscillator1.type = soundType === "heavy-metal" ? "sawtooth" : "sine";
-      oscillator2.type = soundType === "military-trumpet" ? "triangle" : "sine";
-
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + pattern.duration);
-
-      oscillator1.start(audioContext.currentTime);
-      oscillator2.start(audioContext.currentTime);
-      oscillator1.stop(audioContext.currentTime + pattern.duration);
-      oscillator2.stop(audioContext.currentTime + pattern.duration);
+      audio.src = ""; // Force browser to dump the audio stream
+      audio.load();
     }
 
-    // Play immediately
-    playBeep();
-
-    // Then play at intervals
-    intervalId = setInterval(() => {
-      playBeep();
-    }, pattern.interval);
+    // 2. KILL THE BEEP (The Oscillator)
+    // In your video, this is what stayed playing!
+    if (oscillator) {
+      try {
+        oscillator.stop(); 
+        oscillator.disconnect(); // This "pulls the plug"
+        if (gainNode) gainNode.disconnect();
+      } catch (e) {
+        // Already stopped
+      } finally {
+        oscillator = null;
+        gainNode = null;
+      }
+    }
+    console.log("ALARM TERMINATED SUCCESSFULLY");
   }
 
   return { start, stop };
 }
 
-// Request browser notification permission
 export async function requestNotificationPermission() {
-  if (!("Notification" in window)) {
-    console.log("This browser does not support notifications");
-    return false;
+  if (!("Notification" in window)) return;
+  if (Notification.permission === "default") {
+    await Notification.requestPermission();
   }
-
-  if (Notification.permission === "granted") {
-    return true;
-  }
-
-  if (Notification.permission !== "denied") {
-    const permission = await Notification.requestPermission();
-    return permission === "granted";
-  }
-
-  return false;
 }
 
-// Show browser notification
-export function showAlarmNotification(alarm) {
-  if (Notification.permission === "granted") {
-    const notification = new Notification("⏰ Alarm!", {
-      body: alarm.label || "Wake Up!",
-      icon: "/favicon.ico",
-      tag: alarm.id,
-      requireInteraction: true,
-    });
-
-    notification.onclick = () => {
-      window.focus();
-      notification.close();
-    };
-
-    return notification;
-  }
-  return null;
+export function showAlarmNotification(label = "Wake up!") {
+  if (!("Notification" in window)) return;
+  const notify = () => new Notification("Alarm!", { body: label });
+  if (Notification.permission === "granted") notify();
+  else Notification.requestPermission().then(p => p === "granted" && notify());
 }

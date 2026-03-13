@@ -3,28 +3,35 @@
   justify-content: center;
   align-items: center;
   padding: 20px;
+  background: #0a0a0a; /* Dark background to make the card pop */
+  min-height: 400px;
 }
 
 .game-card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 15px;
+  background: #ffffff; /* Solid white background */
   padding: 30px;
-  color: #fff;
+  border-radius: 12px;
+  border: 3px solid #000000; /* Thick black border */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   max-width: 600px;
   width: 100%;
+  color: #000000; /* High visibility black text */
 }
 
 .game-card h2 {
   text-align: center;
   margin-bottom: 10px;
   font-size: 28px;
-  color: #61dafb;
+  font-weight: 900;
+  color: #000000;
+  text-transform: uppercase;
 }
 
 .game-description {
   text-align: center;
-  color: rgba(255, 255, 255, 0.8);
+  color: #1a1a1a;
+  font-size: 1.1rem;
+  font-weight: 500;
   margin-bottom: 20px;
 }
 
@@ -33,48 +40,47 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 15px;
   margin-bottom: 20px;
-  background: rgba(0, 0, 0, 0.3);
+  background: #f0f0f0; /* Light gray for contrast */
   padding: 15px;
-  border-radius: 10px;
-}
-
-.stat {
-  text-align: center;
+  border-radius: 8px;
+  border: 2px solid #000000;
 }
 
 .stat-label {
   display: block;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 5px;
+  font-size: 0.8rem;
+  color: #444;
+  font-weight: bold;
+  text-transform: uppercase;
 }
 
 .stat-value {
   display: block;
   font-size: 24px;
-  font-weight: bold;
-  color: #61dafb;
+  font-weight: 900;
+  color: #0000ff; /* Bold blue for stats */
 }
 
 .btn-start,
 .btn-replay {
   width: 100%;
-  padding: 12px;
-  background: linear-gradient(135deg, #61dafb, #3dd5f3);
+  padding: 15px;
+  background: #000000; /* Solid black button */
   border: none;
-  border-radius: 8px;
-  color: #fff;
-  font-weight: bold;
-  font-size: 16px;
+  border-radius: 5px;
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 1.2rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.1s;
   margin-bottom: 20px;
+  text-transform: uppercase;
 }
 
 .btn-start:hover,
 .btn-replay:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(97, 218, 251, 0.4);
+  background: #333;
+  transform: scale(1.02);
 }
 
 .dots-grid {
@@ -83,7 +89,8 @@
   gap: 15px;
   margin: 30px 0;
   padding: 20px;
-  background: rgba(0, 0, 0, 0.3);
+  background: #f0f0f0;
+  border: 3px solid #000000;
   border-radius: 10px;
 }
 
@@ -92,63 +99,71 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(97, 218, 251, 0.2);
-  border: 2px solid #61dafb;
+  background: #ffffff;
+  border: 3px solid #000000;
   border-radius: 50%;
   cursor: pointer;
-  font-weight: bold;
-  font-size: 18px;
-  color: #61dafb;
+  font-weight: 900;
+  font-size: 20px;
+  color: #000000;
   transition: all 0.2s ease;
 }
 
 .dot:hover {
-  background: rgba(97, 218, 251, 0.4);
-  transform: scale(1.1);
+  background: #e0e0e0;
+  transform: scale(1.05);
 }
 
 .dot.active {
-  background: #61dafb;
-  color: #000;
-  box-shadow: 0 0 20px rgba(97, 218, 251, 0.8);
+  background: #00ff00; /* Vibrant green for active dots */
+  color: #000000;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
   transform: scale(1.1);
+  border-color: #000;
 }
 
 .level-info {
   text-align: center;
-  background: rgba(97, 218, 251, 0.1);
+  background: #000000;
   padding: 10px;
   border-radius: 5px;
-  color: #61dafb;
-  font-weight: bold;
+  color: #ffffff;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .game-over {
-  background: rgba(0, 0, 0, 0.4);
+  background: #ffffff;
   padding: 20px;
   border-radius: 10px;
   text-align: center;
 }
 
 .game-over h3 {
-  color: #61dafb;
+  color: #ff0000; /* Red for Game Over */
+  font-weight: 900;
   margin-bottom: 15px;
   font-size: 24px;
+  text-transform: uppercase;
 }
 
 .final-stats {
-  background: rgba(97, 218, 251, 0.1);
+  background: #f0f0f0;
   padding: 15px;
   border-radius: 8px;
+  border: 2px solid #000;
   margin-bottom: 15px;
 }
 
 .final-stats p {
   margin: 8px 0;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 16px;
+  color: #000;
+  font-size: 1.1rem;
+  font-weight: 700;
 }
 
 .final-stats strong {
-  color: #61dafb;
+  color: #0000ff;
+  font-size: 1.3rem;
 }

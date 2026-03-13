@@ -2,39 +2,47 @@ import React, { useState, useEffect } from "react";
 import "./FlipGrid.css";
 
 const FlipGrid = ({ onGameEnd }) => {
-  const [gameState, setGameState] = useState("idle");
+  const [gameState, setGameState] = useState("idle"); 
   const [cards, setCards] = useState([]);
   const [flipped, setFlipped] = useState([]);
   const [matched, setMatched] = useState([]);
   const [moves, setMoves] = useState(0);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(60);
-  const GRID_SIZE = 4; // 4x4 grid = 16 cards
+  const GRID_SIZE = 4;
 
   const symbols = ["🌟", "🎨", "🚀", "🎭", "🎪", "🎸", "🎲", "🎯"];
 
   useEffect(() => {
+    let timer;
     if (gameState === "playing" && timeLeft > 0) {
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-      return () => clearTimeout(timer);
-    } else if (gameState === "playing" && timeLeft === 0) {
-      endGame();
+      timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
+    } else if (timeLeft === 0 && gameState === "playing") {
+      endGame(false);
     }
+    return () => clearInterval(timer);
   }, [gameState, timeLeft]);
 
   useEffect(() => {
     if (flipped.length === 2) {
-      checkMatch();
+      const timer = setTimeout(() => checkMatch(), 600);
+      return () => clearTimeout(timer);
     }
   }, [flipped]);
+
+  useEffect(() => {
+    if (matched.length === cards.length && cards.length > 0 && gameState === "playing") {
+      endGame(true);
+    }
+  }, [matched, cards, gameState]);
 
   const initializeGame = () => {
     const pairs = [];
     for (let i = 0; i < (GRID_SIZE * GRID_SIZE) / 2; i++) {
       pairs.push(symbols[i % symbols.length], symbols[i % symbols.length]);
     }
-    // Shuffle array
-    const shuffled = pairs.sort(() => Math.random() - 0.5);
+    const shuffled = [...pairs].sort(() => Math.random() - 0.5);
+    
     setCards(shuffled);
     setFlipped([]);
     setMatched([]);
@@ -47,14 +55,13 @@ const FlipGrid = ({ onGameEnd }) => {
   const checkMatch = () => {
     const [first, second] = flipped;
     if (cards[first] === cards[second]) {
-      setMatched([...matched, first, second]);
-      setScore(score + 10);
-      setFlipped([]);
+      setMatched((prev) => [...prev, first, second]);
+      setScore((prev) => prev + 20);
     } else {
-      setScore(Math.max(score - 1, 0));
-      setTimeout(() => setFlipped([]), 600);
+      setScore((prev) => Math.max(prev - 2, 0));
     }
-    setMoves(moves + 1);
+    setFlipped([]);
+    setMoves((prev) => prev + 1);
   };
 
   const handleCardClick = (index) => {
@@ -62,44 +69,33 @@ const FlipGrid = ({ onGameEnd }) => {
       gameState !== "playing" ||
       flipped.includes(index) ||
       matched.includes(index) ||
-      flipped.length === 2
-    ) {
-      return;
-    }
-    setFlipped([...flipped, index]);
+      flipped.length >= 2
+    ) return;
+    setFlipped((prev) => [...prev, index]);
   };
 
-  const endGame = () => {
+  const endGame = (isWin) => {
     setGameState("finished");
     if (onGameEnd) {
       onGameEnd({
-        score,
+        score: score + (isWin ? timeLeft : 0),
         moves,
         matchedPairs: matched.length / 2,
+        isVictory: isWin,
       });
     }
   };
 
-  if (cards.length === 0 && gameState === "idle") {
-    return (
-      <div className="flip-grid-container">
-        <div className="game-card">
-          <h2>🎴 Flip Grid Memory</h2>
-          <p className="game-description">
-            Match pairs of symbols before time runs out!
-          </p>
-          <button onClick={initializeGame} className="btn-start">
-            Start Game (60s)
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flip-grid-container">
       <div className="game-card">
-        <h2>🎴 Flip Grid Memory</h2>
+        <div className="game-header">
+          <span className="material-symbols-outlined icon-main">grid_view</span>
+          <h2 className="high-vis-title">Flip Grid Mission</h2>
+          <p className="game-description high-vis-text">
+            Match all <strong>8 pairs</strong> to disarm.
+          </p>
+        </div>
 
         <div className="game-stats">
           <div className="stat">
@@ -112,7 +108,7 @@ const FlipGrid = ({ onGameEnd }) => {
           </div>
           <div className="stat">
             <span className="stat-label">Time</span>
-            <span className="stat-value">{timeLeft}s</span>
+            <span className="stat-value timer-alert">{timeLeft}s</span>
           </div>
         </div>
 
@@ -123,45 +119,51 @@ const FlipGrid = ({ onGameEnd }) => {
               style={{ width: `${(matched.length / cards.length) * 100}%` }}
             ></div>
             <span className="progress-text">
-              {matched.length / 2}/{cards.length / 2} Pairs
+              {matched.length / 2} / 8 Pairs Found
             </span>
           </div>
         )}
 
-        <div className="cards-grid">
-          {cards.map((card, index) => (
-            <div
-              key={index}
-              className={`card ${
-                flipped.includes(index) || matched.includes(index) ? "flipped" : ""
-              }`}
-              onClick={() => handleCardClick(index)}
-            >
-              <div className="card-inner">
-                <div className="card-front">?</div>
-                <div className="card-back">{card}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+        {gameState === "idle" ? (
+          <button onClick={initializeGame} className="btn-start">
+            Initialize Grid
+          </button>
+        ) : (
+          <div className="cards-grid">
+            {cards.map((card, index) => {
+              const isFlipped = flipped.includes(index) || matched.includes(index);
+              return (
+                <div
+                  key={index}
+                  className={`card ${isFlipped ? "flipped" : ""}`}
+                  onClick={() => handleCardClick(index)}
+                >
+                  <div className="card-inner">
+                    <div className="card-front">?</div>
+                    <div className="card-back">{card}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {gameState === "finished" && (
           <div className="game-over">
-            <h3>Game Over!</h3>
-            <div className="final-stats">
-              <p>
-                <strong>Final Score:</strong> {score}
-              </p>
-              <p>
-                <strong>Total Moves:</strong> {moves}
-              </p>
-              <p>
-                <strong>Pairs Matched:</strong> {matched.length / 2}/{cards.length / 2}
-              </p>
+            <div className={`status-banner ${matched.length === cards.length ? "bg-success" : "bg-danger"}`}>
+              {matched.length === cards.length ? "ALARM DISARMED" : "MISSION FAILED"}
             </div>
-            <button onClick={initializeGame} className="btn-replay">
-              Play Again
-            </button>
+            
+            <div className="final-stats">
+              <p>Score: <strong>{score}</strong></p>
+              <p>Moves: <strong>{moves}</strong></p>
+            </div>
+
+            {matched.length < cards.length ? (
+              <button onClick={initializeGame} className="btn-replay">Retry Mission</button>
+            ) : (
+              <p className="success-msg">Neural pattern verified.</p>
+            )}
           </div>
         )}
       </div>

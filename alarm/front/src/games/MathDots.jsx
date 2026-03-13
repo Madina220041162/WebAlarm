@@ -1,114 +1,123 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./MathDots.css";
 
 const MathDots = ({ onGameEnd }) => {
   const [gameState, setGameState] = useState("idle"); // idle, playing, finished
   const [pattern, setPattern] = useState([]);
   const [userPattern, setUserPattern] = useState([]);
-  const [level, setLevel] = useState(1);
+  const [level, setLevel] = useState(0);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30);
   const [activeDot, setActiveDot] = useState(null);
   const [canClick, setCanClick] = useState(false);
 
-  const gridSize = 3; // 3x3 grid
+  const gridSize = 3;
+  const WIN_LEVEL = 4; // Level required to disarm the alarm
+  const timerRef = useRef(null);
 
+  // Countdown timer logic
   useEffect(() => {
     if (gameState === "playing" && timeLeft > 0) {
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-      return () => clearTimeout(timer);
-    } else if (gameState === "playing" && timeLeft === 0) {
-      endGame();
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && gameState === "playing") {
+      endGame(false);
     }
+
+    return () => clearInterval(timerRef.current);
   }, [gameState, timeLeft]);
 
   const startGame = () => {
     setPattern([]);
     setUserPattern([]);
     setScore(0);
-    setLevel(1);
-    setTimeLeft(30);
-    setCanClick(true);
+    setLevel(0);
+    setTimeLeft(45); // Giving a bit more time for memory patterns
     setGameState("playing");
+    // Start the first pattern sequence
+    setTimeout(() => nextLevel([]), 500);
   };
 
-  const endGame = () => {
+  const endGame = (isWin) => {
     setGameState("finished");
     setCanClick(false);
+    clearInterval(timerRef.current);
+
     if (onGameEnd) {
       onGameEnd({
-        score,
-        level,
-        pattern: pattern.length,
+        score: score,
+        level: level,
+        isVictory: isWin, // Critical for the alarm disarm logic
+        details: `Reached Level ${level}`,
       });
     }
   };
 
-  const generateRandomDot = () => {
-    return Math.floor(Math.random() * (gridSize * gridSize));
+  const nextLevel = (currentPattern) => {
+    const newDot = Math.floor(Math.random() * (gridSize * gridSize));
+    const nextPattern = [...currentPattern, newDot];
+    setPattern(nextPattern);
+    setUserPattern([]);
+    setLevel(nextPattern.length);
+    playPatternSequence(nextPattern);
   };
 
-  const playPattern = async () => {
+  const playPatternSequence = async (sequence) => {
     setCanClick(false);
-    const newPattern = [...pattern, generateRandomDot()];
-    setPattern(newPattern);
-    setUserPattern([]);
-    setLevel(newPattern.length);
-
-    // Play the pattern
-    for (let i = 0; i < newPattern.length; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      playDot(newPattern[i]);
-      await new Promise((resolve) => setTimeout(resolve, 300));
+    for (const dotId of sequence) {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      flashDot(dotId);
+      await new Promise((resolve) => setTimeout(resolve, 400));
     }
     setCanClick(true);
   };
 
-  const playDot = (dotId) => {
+  const flashDot = (dotId) => {
     setActiveDot(dotId);
-    setTimeout(() => setActiveDot(null), 200);
+    setTimeout(() => setActiveDot(null), 300);
   };
 
   const handleDotClick = (dotId) => {
     if (!canClick || gameState !== "playing") return;
 
-    playDot(dotId);
+    flashDot(dotId);
     const newUserPattern = [...userPattern, dotId];
     setUserPattern(newUserPattern);
 
-    // Check if user's pattern matches
-    if (newUserPattern[newUserPattern.length - 1] !== pattern[newUserPattern.length - 1]) {
-      // Wrong! Game over
-      setScore(score - 5);
-      setCanClick(false);
-      endGame();
+    // Check if the most recent click is correct
+    const currentIndex = newUserPattern.length - 1;
+    if (newUserPattern[currentIndex] !== pattern[currentIndex]) {
+      // Wrong move
+      setScore((prev) => Math.max(0, prev - 10));
+      endGame(false);
       return;
     }
 
-    // If user completed the pattern, show next level
+    // Check if the whole pattern is finished
     if (newUserPattern.length === pattern.length) {
-      setScore(score + 10 * level);
-      setCanClick(false);
-      setTimeout(playPattern, 1000);
-    }
-  };
-
-  const handleStartOrNext = () => {
-    if (gameState === "idle") {
-      startGame();
-      setTimeout(() => playPattern(), 500);
-    } else if (gameState === "playing" && userPattern.length === 0 && pattern.length === 0) {
-      setTimeout(() => playPattern(), 500);
+      setScore((prev) => prev + (10 * level));
+      
+      // WIN CONDITION CHECK
+      if (level >= WIN_LEVEL) {
+        endGame(true);
+      } else {
+        setCanClick(false);
+        setTimeout(() => nextLevel(pattern), 1000);
+      }
     }
   };
 
   return (
     <div className="math-dots-container">
       <div className="game-card">
-        <h2>🎯 Math Dots Pattern</h2>
-        <p className="game-description">
-          Watch the pattern and repeat it by clicking the dots!
-        </p>
+        <div className="game-header">
+          <span className="material-symbols-outlined icon-main">psychology</span>
+          <h2>Pattern Mission</h2>
+          <p className="game-description">
+            Reach <strong>Level {WIN_LEVEL}</strong> to silence the alarm.
+          </p>
+        </div>
 
         <div className="game-stats">
           <div className="stat">
@@ -117,7 +126,7 @@ const MathDots = ({ onGameEnd }) => {
           </div>
           <div className="stat">
             <span className="stat-label">Level</span>
-            <span className="stat-value">{level}</span>
+            <span className="stat-value highlight">{level}/{WIN_LEVEL}</span>
           </div>
           <div className="stat">
             <span className="stat-label">Time</span>
@@ -125,47 +134,51 @@ const MathDots = ({ onGameEnd }) => {
           </div>
         </div>
 
-        {gameState === "idle" && (
-          <button onClick={handleStartOrNext} className="btn-start">
-            Start Game
+        {gameState === "idle" ? (
+          <button onClick={startGame} className="btn-start">
+            Begin Sequence
           </button>
+        ) : (
+          <div className="dots-grid">
+            {Array.from({ length: gridSize * gridSize }).map((_, index) => (
+              <button
+                key={index}
+                disabled={!canClick || gameState === "finished"}
+                className={`dot ${activeDot === index ? "active" : ""} ${!canClick ? "sequence-playing" : ""}`}
+                onClick={() => handleDotClick(index)}
+              >
+                <div className="dot-inner"></div>
+              </button>
+            ))}
+          </div>
         )}
 
-        <div className="dots-grid">
-          {Array.from({ length: gridSize * gridSize }).map((_, index) => (
-            <div
-              key={index}
-              className={`dot ${activeDot === index ? "active" : ""}`}
-              onClick={() => handleDotClick(index)}
-            >
-              {index + 1}
-            </div>
-          ))}
-        </div>
-
-        {gameState === "playing" && pattern.length > 0 && (
+        {gameState === "playing" && (
           <div className="level-info">
-            <p>Repeat the pattern! ({userPattern.length}/{pattern.length})</p>
+            <p className={canClick ? "text-primary animate-pulse" : "text-slate-400"}>
+              {canClick ? "Your Turn: Repeat Pattern" : "Watch Closely..."}
+            </p>
           </div>
         )}
 
         {gameState === "finished" && (
-          <div className="game-over">
-            <h3>Game Over!</h3>
-            <div className="final-stats">
-              <p>
-                <strong>Final Score:</strong> {score}
-              </p>
-              <p>
-                <strong>Level Reached:</strong> {level}
-              </p>
-              <p>
-                <strong>Pattern Length:</strong> {pattern.length}
-              </p>
+          <div className="game-over animate-in zoom-in duration-300">
+            <div className={`status-banner ${level >= WIN_LEVEL ? "bg-success" : "bg-danger"}`}>
+              {level >= WIN_LEVEL ? "ALARM DISARMED" : "MISSION FAILED"}
             </div>
-            <button onClick={startGame} className="btn-replay">
-              Play Again
-            </button>
+            
+            <div className="final-stats">
+              <p>Final Level: <strong>{level}</strong></p>
+              <p>Final Score: <strong>{score}</strong></p>
+            </div>
+
+            {level < WIN_LEVEL ? (
+              <button onClick={startGame} className="btn-replay">
+                Try Again
+              </button>
+            ) : (
+              <p className="success-text">Verification Complete. You may now dismiss the alarm.</p>
+            )}
           </div>
         )}
       </div>

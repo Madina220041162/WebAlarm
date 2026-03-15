@@ -7,6 +7,7 @@ const AuthContext = createContext(null);
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const API_URL = `${BASE_URL}/api/auth`;
+const ACTIVE_ALARM_STORAGE_KEY = "active-alarm-runtime";
 
 export function AuthProvider({ children }) {
   // ---------------- USER STATE ----------------
@@ -27,18 +28,31 @@ export function AuthProvider({ children }) {
 
   // ---------------- GLOBAL ALARM ----------------
   const [activeAlarmData, setActiveAlarmData] = useState(null);
+  const [alarmAudioReady, setAlarmAudioReady] = useState(true);
   const globalAudioRef = useRef(null);
 
-  const startGlobalAlarm = (alarmData) => {
+  const startGlobalAlarm = async (alarmData) => {
+    if (!alarmData) return;
+
+    const incomingId = alarmData.id || alarmData._id;
+    const currentId = activeAlarmData?.id || activeAlarmData?._id;
+
+    // Avoid restarting the same active alarm repeatedly (e.g. socket reconnect)
+    if (globalAudioRef.current && incomingId && currentId && incomingId === currentId) {
+      return;
+    }
+
     if (globalAudioRef.current) {
       globalAudioRef.current.stop();
     }
 
     const audio = createAlarmSound(alarmData.sound || "rooster");
-    audio.start(true); // loop indefinitely
+    const didPlay = await audio.start(true); // loop indefinitely
 
     globalAudioRef.current = audio;
     setActiveAlarmData(alarmData);
+    setAlarmAudioReady(Boolean(didPlay));
+    localStorage.setItem(ACTIVE_ALARM_STORAGE_KEY, JSON.stringify(alarmData));
 
     console.log("🔊 Global Alarm Started:", alarmData.label);
   };
@@ -49,8 +63,52 @@ export function AuthProvider({ children }) {
       globalAudioRef.current = null;
     }
     setActiveAlarmData(null);
+    setAlarmAudioReady(true);
+    localStorage.removeItem(ACTIVE_ALARM_STORAGE_KEY);
     console.log("🔇 Global Alarm Stopped.");
   };
+
+  const resumeGlobalAlarmAudio = async () => {
+    if (!globalAudioRef.current) return false;
+    const didPlay = await globalAudioRef.current.start(true);
+    setAlarmAudioReady(Boolean(didPlay));
+    return Boolean(didPlay);
+  };
+
+  // Restore active alarm after page reloads
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(ACTIVE_ALARM_STORAGE_KEY);
+      if (!raw) return;
+
+      const restoredAlarm = JSON.parse(raw);
+      if (!restoredAlarm) return;
+
+      console.log("♻️ Restoring active alarm after reload:", restoredAlarm.label);
+      startGlobalAlarm(restoredAlarm);
+    } catch (error) {
+      console.warn("Failed to restore active alarm from storage:", error);
+      localStorage.removeItem(ACTIVE_ALARM_STORAGE_KEY);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // If autoplay is blocked after reload, retry as soon as user interacts.
+  useEffect(() => {
+    if (!activeAlarmData || alarmAudioReady) return;
+
+    const retryPlayback = () => {
+      resumeGlobalAlarmAudio();
+    };
+
+    window.addEventListener("pointerdown", retryPlayback);
+    window.addEventListener("keydown", retryPlayback);
+
+    return () => {
+      window.removeEventListener("pointerdown", retryPlayback);
+      window.removeEventListener("keydown", retryPlayback);
+    };
+  }, [activeAlarmData, alarmAudioReady]);
 
   // ---------------- GLOBAL SOCKET ----------------
   const socketRef = useRef(null);
@@ -204,7 +262,9 @@ export function AuthProvider({ children }) {
         setExplosionMode,
         startGlobalAlarm,
         stopGlobalAlarm,
+        resumeGlobalAlarmAudio,
         activeAlarmData,
+        alarmAudioReady,
       }}
     >
       {!loading && children}

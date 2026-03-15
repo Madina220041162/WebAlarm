@@ -84,8 +84,8 @@ export default function AlarmModal({ isOpen, onClose, selectedDate, selectedTime
 
     try {
       const [hours, minutes] = time.split(":").map(Number);
-      let alarmDateTime = new Date(date);
-      alarmDateTime.setHours(hours, minutes, 0, 0);
+      const [year, month, day] = date.split("-").map(Number);
+      let alarmDateTime = new Date(year, month - 1, day, hours, minutes, 0, 0);
 
       if (alarmDateTime.getTime() <= Date.now()) {
         alarmDateTime.setDate(alarmDateTime.getDate() + 1);

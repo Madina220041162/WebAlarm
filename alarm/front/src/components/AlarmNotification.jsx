@@ -9,6 +9,8 @@ const SCAN_REQUIRED_FRAMES = 90;
 export default function AlarmNotification({
   alarm,
   proofVerified,
+  alarmAudioReady = true,
+  onResumeAudio,
   onScanVerified,
   onDismiss,
 }) {
@@ -114,6 +116,16 @@ export default function AlarmNotification({
           </div>
 
           <div className="space-y-4">
+            {!proofVerified && !alarmAudioReady && (
+              <button
+                onClick={() => onResumeAudio && onResumeAudio()}
+                className="w-full py-4 px-5 rounded-2xl bg-amber-500 text-white font-black flex items-center justify-center gap-2 hover:bg-amber-600 transition-all"
+              >
+                <span className="material-symbols-outlined">volume_up</span>
+                Tap To Resume Alarm Sound
+              </button>
+            )}
+
             {!proofVerified && activeMission !== 'face' && (
               <div className="grid gap-3">
                 {/* 1. Games Mission */}

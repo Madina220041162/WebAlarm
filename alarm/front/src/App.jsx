@@ -20,7 +20,7 @@ import AlarmNotification from "./components/AlarmNotification";
 import "./App.css";
 
 export default function App() {
-  const { activeAlarmData, stopGlobalAlarm } = useAuth();
+  const { activeAlarmData, stopGlobalAlarm, alarmAudioReady, resumeGlobalAlarmAudio } = useAuth();
   const [proofVerified, setProofVerified] = useState(false);
 
   /**
@@ -66,6 +66,8 @@ const handleMissionSuccess = () => {
         <AlarmNotification
           alarm={activeAlarmData}
           proofVerified={proofVerified}
+          alarmAudioReady={alarmAudioReady}
+          onResumeAudio={resumeGlobalAlarmAudio}
           onScanVerified={handleMissionSuccess} 
           onDismiss={handleDismissAlarm}
           onSnooze={handleDismissAlarm} 

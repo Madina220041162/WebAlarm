@@ -25,12 +25,16 @@ export function createAlarmSound(type = "rooster") {
   audio.volume = 0.7;
   audio.loop = true;
 
-  function start() {
+  async function start() {
     if (context.state === 'suspended') context.resume();
 
-    audio.play().catch(err => {
+    try {
+      await audio.play();
+      return true;
+    } catch (err) {
       console.warn("Alarm sound playback failed. No fallback beep will be started.", err?.message || err);
-    });
+      return false;
+    }
   }
 
   function stop() {
